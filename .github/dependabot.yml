@@ -1,0 +1,49 @@
+# Dependabot opens PRs to keep dependencies current and patch vulnerabilities.
+# Docs: https://docs.github.com/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+# Minor and patch updates are grouped into one PR per ecosystem to keep PR noise low.
+# Major updates still come as individual PRs because they can break things.
+version: 2
+updates:
+  - package-ecosystem: "npm" # pnpm lockfiles are handled by the npm ecosystem
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    labels: ["type:chore", "area:web"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "uv"
+    directory: "/worker"
+    schedule:
+      interval: "weekly"
+    labels: ["type:chore", "area:worker"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "docker"
+    directory: "/worker"
+    schedule:
+      interval: "weekly"
+    labels: ["type:chore", "area:worker"]
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels: ["type:chore", "area:infra"]
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

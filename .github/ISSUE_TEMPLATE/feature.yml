@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest new functionality or an improvement
+title: "feat: "
+labels: ["type:feat"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem does this solve? Who has it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: How do we know it's done?
+      placeholder: |
+        - [ ] …
+        - [ ] …
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - web
+        - worker / measurement
+        - database
+        - infrastructure / CI
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

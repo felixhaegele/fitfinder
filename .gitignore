@@ -1,0 +1,59 @@
+# --- Secrets / env ---
+.env
+.env.*
+!.env.example
+
+# --- OS / editors ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+
+# --- Node / Next.js (web) ---
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.pnpm-store/
+npm-debug.log*
+pnpm-debug.log*
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.vercel
+
+# --- Python (worker, print) ---
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# --- Supabase ---
+supabase/.branches/
+supabase/.temp/
+
+# --- Terraform (infra) ---
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+
+# --- Generated artifacts ---
+print/out/
+worker/debug/
