@@ -45,11 +45,13 @@ brew install node pnpm uv supabase/tap/supabase
 cp .env.example .env.local   # then fill in values
 ```
 
-Per-package instructions are added as each package is scaffolded:
+- **Web:** `cd web && pnpm install && pnpm dev` → http://localhost:3000 ([details](web/README.md))
+- **Worker:** `cd worker && uv sync && uv run fastapi dev app/main.py` → http://127.0.0.1:8000/health ([details](worker/README.md))
+- **Database:** `supabase start`, then `supabase db reset` *(added in Milestone 3)*
 
-- **Database:** `supabase start`, then `supabase db reset` *(Milestone 3)*
-- **Web:** `cd web && pnpm install && pnpm dev` *(Milestone 2)*
-- **Worker:** `cd worker && uv sync && uv run fastapi dev app/main.py` *(Milestone 2)*
+## CI
+
+Every PR runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Path filters run only the jobs for packages that changed: `web` (lint, typecheck, unit + e2e tests), `worker` (ruff, mypy, pytest) and `worker-image` (Docker build + `/health` smoke test). SonarQube Cloud then analyses code quality and coverage. Branch protection requires the single `ci-ok` job, which summarises the others.
 
 ## Contributing
 

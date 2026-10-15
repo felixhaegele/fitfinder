@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same PR cancels the older, now-pointless run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Least privilege: jobs can read the repo and nothing else unless they ask.
+permissions:
+  contents: read
+
+jobs:
+  # Decides which packages changed, so a docs-only PR doesn't run the worker tests.
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      web: ${{ steps.filter.outputs.web }}
+      worker: ${{ steps.filter.outputs.worker }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            web:
+              - 'web/**'
+              - '.github/workflows/ci.yml'
+            worker:
+              - 'worker/**'
+              - '.github/workflows/ci.yml'
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-web
+          path: web/coverage/lcov.info
+          retention-days: 7
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
+
+  worker:
+    needs: changes
+    if: needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10
+        with:
+          enable-cache: true
+          cache-dependency-glob: worker/uv.lock
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-worker
+          path: worker/coverage.xml
+          retention-days: 7
+
+  # Proves the Dockerfile still builds. Pushing to a registry comes with deployment (Milestone 6).
+  worker-image:
+    needs: changes
+    if: needs.changes.outputs.worker == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/build-push-action@v7
+        with:
+          context: worker
+          push: false
+          load: true
+          tags: fitfinder-worker:ci
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,scope=worker,mode=max
+      - name: Smoke test /health
+        run: |
+          docker run -d --name worker -p 8080:8080 fitfinder-worker:ci
+          for i in $(seq 1 20); do
+            curl -fsS localhost:8080/health && exit 0
+            sleep 1
+          done
+          docker logs worker
+          exit 1
+
+  # Static analysis + coverage across both packages. Skips itself when the token
+  # isn't available (e.g. Dependabot PRs, which don't get repo secrets).
+  sonar:
+    needs: [changes, web, worker]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        if: env.SONAR_TOKEN != ''
+        with:
+          fetch-depth: 0 # full history lets Sonar tell new code from old
+      - uses: actions/download-artifact@v8
+        if: env.SONAR_TOKEN != ''
+        with:
+          pattern: coverage-*
+          path: coverage
+      - name: Put coverage reports where sonar-project.properties expects them
+        if: env.SONAR_TOKEN != ''
+        # Reports contain paths relative to each package (src/..., app/...);
+        # Sonar resolves them from the repo root, so prefix the package directory.
+        run: |
+          mkdir -p web/coverage
+          if [ -f coverage/coverage-web/lcov.info ]; then
+            sed 's#^SF:#SF:web/#' coverage/coverage-web/lcov.info > web/coverage/lcov.info
+          fi
+          if [ -f coverage/coverage-worker/coverage.xml ]; then
+            sed 's#<source>app</source>#<source>worker/app</source>#' coverage/coverage-worker/coverage.xml > worker/coverage.xml
+          fi
+      - uses: SonarSource/sonarqube-scan-action@v8
+        if: env.SONAR_TOKEN != ''
+      - if: env.SONAR_TOKEN == ''
+        run: echo "::notice::SONAR_TOKEN not available, skipping SonarQube Cloud analysis."
+
+  # The one check branch protection requires. Path filters mean web/worker jobs are
+  # sometimes skipped, and a required check that's skipped never reports — so this
+  # job always runs and fails only if something that did run failed.
+  ci-ok:
+    needs: [changes, web, worker, worker-image]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: $RESULTS"
+          for r in $RESULTS; do
+            if [ "$r" = "failure" ] || [ "$r" = "cancelled" ]; then exit 1; fi
+          done
