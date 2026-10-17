@@ -1,0 +1,2 @@
+-- Local/dev seed data, applied by `supabase db reset` after all migrations.
+-- Never runs against staging or production. Shoe models are added in #14.
