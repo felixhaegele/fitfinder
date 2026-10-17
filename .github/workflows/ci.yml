@@ -23,6 +23,7 @@ jobs:
     outputs:
       web: ${{ steps.filter.outputs.web }}
       worker: ${{ steps.filter.outputs.worker }}
+      supabase: ${{ steps.filter.outputs.supabase }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -34,6 +35,9 @@ jobs:
               - '.github/workflows/ci.yml'
             worker:
               - 'worker/**'
+              - '.github/workflows/ci.yml'
+            supabase:
+              - 'supabase/**'
               - '.github/workflows/ci.yml'
 
   web:
@@ -123,6 +127,22 @@ jobs:
           docker logs worker
           exit 1
 
+  # Applies every migration to a fresh Postgres, lints the schema and runs the pgTAP tests.
+  # Only the database container is started (not Auth/Storage/Studio): that's all migrations
+  # and RLS tests need, and it boots in a fraction of the time.
+  supabase:
+    needs: changes
+    if: needs.changes.outputs.supabase == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0 # keep in step with the CLI used locally
+      - run: supabase db start
+      - run: supabase db lint --fail-on error
+      - run: supabase test db
+
   # Static analysis + coverage across both packages. Skips itself when the token
   # isn't available (e.g. Dependabot PRs, which don't get repo secrets).
   sonar:
@@ -162,7 +182,7 @@ jobs:
   # sometimes skipped, and a required check that's skipped never reports — so this
   # job always runs and fails only if something that did run failed.
   ci-ok:
-    needs: [changes, web, worker, worker-image]
+    needs: [changes, web, worker, worker-image, supabase]
     if: always()
     runs-on: ubuntu-latest
     steps:
