@@ -14,6 +14,7 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Generated test output
     "coverage/**",
+    "coverage-e2e/**",
     "playwright-report/**",
     "test-results/**",
   ]),

@@ -1,6 +1,12 @@
 import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 
+// E2E_COVERAGE=1 (set by `pnpm test:e2e:coverage`) builds with source maps and without
+// minification, so V8 coverage maps back to src/ line by line (minified code maps many
+// source lines onto a few, which loses coverage). Never set it for a deployed build:
+// browser maps are served publicly and would expose the source.
+const coverageBuild = process.env.E2E_COVERAGE === "1";
+
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
@@ -13,6 +19,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  ...(coverageBuild && {
+    productionBrowserSourceMaps: true,
+    experimental: { serverSourceMaps: true, turbopackMinify: false },
+  }),
 };
 
 // Sentry build step: source-map upload and release tagging. The release name
