@@ -85,3 +85,14 @@ uv run ruff check . && uv run ruff format \--check . && uv run mypy . && uv run 
 - For any task larger than a small fix: propose a plan first, then implement.  
 - Prefer boring, well-documented tools. Explain *why* when introducing infra concepts — the owner is learning.  
 - When a step needs the owner (creating accounts, adding secrets, clicking in a dashboard), stop and list exactly what to do.
+
+## Parallel sessions
+
+The owner often runs several Claude sessions on this repo at once. Each session works in its own git worktree (`.claude/worktrees/<branch>`, gitignored).
+
+- **Claim before you start.** Before starting an issue, check `gh pr list` and `git branch -a`. If a branch or PR for that issue exists, it's taken: ask the owner instead of starting. Once you start, push the branch and open a **draft PR** early, so other sessions can see the issue is in progress.  
+- **Stay in your lane.** Never commit to, rebase or delete another session's branch or worktree.  
+- **Shared files cause conflicts:** `.github/workflows/ci.yml`, `supabase/config.toml`, `supabase/migrations/`, `.env.example`, lockfiles. Keep changes there small, and rebase on `main` right before merging. Migrations are ordered by timestamp, so if another migration landed on `main` after yours was created, check that yours still applies after it (`supabase db reset`).  
+- **Hand-offs go in GitHub.** Write a decision another session depends on (e.g. template marker positions used by the measurement pipeline) in the PR description or an issue comment, not only in chat.  
+- **Urgent questions:** other sessions can be reached directly (`ListAgents`, then `SendMessage`). Ask; don't edit their work.  
+- **Priorities come from the owner.** If two sessions could take the same next issue, ask.
