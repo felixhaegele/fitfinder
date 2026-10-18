@@ -28,6 +28,9 @@ test("status page updates by itself and shows results and both photos", async ({
     ball_width_mm: 98.2,
     heel_width_mm: 62.1,
     arch_width_mm: 74,
+    side: "left",
+    // 256 points starting at the heel point (0, 0); the shape itself isn't shown yet
+    outline_mm: Array.from({ length: 256 }, (_, i) => [0, i]),
   });
   await adminRest(request, "POST", "classifications", {
     measurement_id: measurement.id,
@@ -35,6 +38,7 @@ test("status page updates by itself and shows results and both photos", async ({
     width_class: "wide",
     arch_class: "medium",
     toe_box_shape: "round",
+    toe_shape: "egyptian",
   });
   await adminRest(request, "PATCH", `submissions?id=eq.${id}`, {
     status: "done",

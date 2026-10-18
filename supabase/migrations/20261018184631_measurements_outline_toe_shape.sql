@@ -26,18 +26,19 @@ alter table public.measurements
     check (side in ('left', 'right')),
   add column outline_mm jsonb not null
     constraint measurements_outline_mm_shape check (
-      -- case forces the order: jsonb_array_length() raises on a non-array instead of
-      -- returning false, and plain `and` doesn't guarantee evaluation order.
+      -- case forces the order of the checks: the later ones raise an error (instead of
+      -- returning false) on input the earlier ones reject, and plain `and` doesn't
+      -- guarantee evaluation order. jsonpath runs in strict mode, because lax mode would
+      -- unwrap each [x, y] pair into two numbers before the filter sees it.
       case
         when jsonb_typeof(outline_mm) <> 'array' then false
-        else
-          jsonb_array_length(outline_mm) = 256
-          -- every point is an [x, y] pair ...
-          and not jsonb_path_exists(outline_mm, '$[*] ? (@.type() != "array" || @.size() != 2)')
-          -- ... of numbers
-          and not jsonb_path_exists(outline_mm, '$[*][*] ? (@.type() != "number")')
-          -- the outline starts at the heel point, the origin of the frame
-          and outline_mm -> 0 = '[0, 0]'::jsonb
+        when jsonb_array_length(outline_mm) <> 256 then false
+        -- every point is an [x, y] pair ...
+        when jsonb_path_exists(outline_mm, 'strict $[*] ? (@.type() != "array" || @.size() != 2)') then false
+        -- ... of numbers
+        when jsonb_path_exists(outline_mm, 'strict $[*][*] ? (@.type() != "number")') then false
+        -- and the outline starts at the heel point, the origin of the frame
+        else outline_mm -> 0 = '[0, 0]'::jsonb
       end
     );
 
