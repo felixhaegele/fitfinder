@@ -24,6 +24,10 @@ Open it in the same browser you requested it from (PKCE flow; cross-device links
 - `src/lib/supabase/{client,server,proxy}.ts`: one Supabase client per runtime.
 - `/login` → magic link email → `/auth/callback` (exchanges the code for a session) → `?next=` page.
 
+## Upload in short
+
+`/upload`: the browser re-encodes the photo (`src/lib/prepare-photo.ts`: applies EXIF rotation, then drops all metadata, max 4000 px), uploads it straight to the private `insoles` bucket under the user's folder, then calls a server action that validates the form (`src/lib/submission-form.ts`) and creates the submission. The database enforces consent, folder, and at most 20 uploads per user per day. The browser step is for privacy, not security: the worker treats every file as untrusted (see #29).
+
 ## Check (same as CI)
 
 ```sh
@@ -34,7 +38,7 @@ pnpm test:coverage       # ...with coverage → coverage/lcov.info
 pnpm test:e2e            # Playwright: builds the app, starts it, runs e2e/ in Chromium
 ```
 
-`test:e2e` needs `supabase start` running and `.env.local` filled in: the login test reads its email from Mailpit. In CI this is the separate `e2e` job.
+`test:e2e` needs `supabase start` running and `.env.local` filled in (including `SUPABASE_SECRET_KEY`): the login test reads its email from Mailpit, and the upload test downloads the stored photo to check that its metadata was removed. In CI this is the separate `e2e` job.
 
 First-time Playwright setup downloads the browser: `pnpm exec playwright install chromium`.
 

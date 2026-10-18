@@ -1,4 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
+import { loadEnvConfig } from "@next/env";
+
+// Same .env.local the app uses, so tests can reach the local Supabase (see e2e/helpers.ts).
+loadEnvConfig(process.cwd());
 
 const port = 3100;
 
