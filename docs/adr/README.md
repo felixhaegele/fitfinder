@@ -8,3 +8,4 @@ To add one, copy [`template.md`](template.md) to `NNNN-short-title.md` (next fre
 | ---- | ---------------------------------------------------------------- | -------- |
 | 0001 | [Record architecture decisions](0001-record-architecture-decisions.md) | Accepted |
 | 0002 | [Initial architecture](0002-initial-architecture.md)             | Accepted |
+| 0003 | [Queue submissions with pgmq and drain them with a scheduled job](0003-submissions-queue.md) | Accepted |
