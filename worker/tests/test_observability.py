@@ -58,6 +58,7 @@ def test_before_send_removes_personal_data() -> None:
         "user": {"id": "u1", "email": "rider@example.com", "ip_address": "1.2.3.4"},
         "request": {
             "url": "http://worker/jobs?token=secret",
+            "query_string": "token=secret&type=email",
             "data": {"image": "..."},
             "cookies": {"session": "x"},
             "headers": {"Authorization": "Bearer x", "User-Agent": "curl"},

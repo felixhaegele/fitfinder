@@ -51,6 +51,7 @@ describe("beforeSend", () => {
       user: { id: "u1", email: "rider@example.com", ip_address: "1.2.3.4" },
       request: {
         url: "https://fitfinder.app/submissions?code=secret",
+        query_string: "code=secret&type=email",
         data: { image: "base64..." },
         cookies: { "sb-abc-auth-token": "eyJx.eyJy.z" },
         headers: {

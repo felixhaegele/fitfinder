@@ -71,6 +71,8 @@ def before_send(event: Event, hint: Hint) -> Event:
     if request is not None:
         request.pop("data", None)
         request.pop("cookies", None)
+        # Stored without the leading "?", so the query rule wouldn't catch its first value.
+        request.pop("query_string", None)
         headers = request.get("headers")
         if isinstance(headers, dict):
             request["headers"] = {

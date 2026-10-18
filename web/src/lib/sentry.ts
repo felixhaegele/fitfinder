@@ -58,6 +58,9 @@ export function scrubEvent<T extends Event>(event: T): T {
   if (request) {
     delete request.data;
     delete request.cookies;
+    // Stored without the leading `?`, so the query rule below wouldn't catch its first value.
+    // The URL keeps the (scrubbed) query string anyway.
+    delete request.query_string;
     if (request.headers) {
       request.headers = Object.fromEntries(
         Object.entries(request.headers).filter(([name]) => SAFE_HEADERS.has(name.toLowerCase())),
