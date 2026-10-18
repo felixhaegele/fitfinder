@@ -11,3 +11,4 @@ To add one, copy [`template.md`](template.md) to `NNNN-short-title.md` (next fre
 | 0003 | [Queue submissions with pgmq and drain them with a scheduled job](0003-submissions-queue.md) | Accepted |
 | 0004 | [Place the insole diagonally on an A4 template described by one geometry JSON](0004-diagonal-a4-template.md) | Accepted |
 | 0005 | [Segment the insole by thresholding a lighting-flattened page inside the measuring zone](0005-insole-segmentation.md) | Accepted |
+| 0006 | [Delete accounts in a server action with the secret key: files first, then the user](0006-account-deletion.md) | Accepted |
