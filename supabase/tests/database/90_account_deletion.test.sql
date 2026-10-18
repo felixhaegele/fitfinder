@@ -1,4 +1,4 @@
--- Account deletion (#31, ADR 0005): deleting the auth user must remove every row that
+-- Account deletion (#31, ADR 0006): deleting the auth user must remove every row that
 -- belongs to them. The web app deletes the user through the Auth admin API; Postgres
 -- foreign-key cascades do the rest. Storage objects are purged separately (Storage API).
 begin;

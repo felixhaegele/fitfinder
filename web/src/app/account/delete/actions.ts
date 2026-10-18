@@ -15,7 +15,7 @@ import { createClient } from "@/lib/supabase/server";
 export type DeleteAccountState = { error: string } | null;
 
 /**
- * Deletes the logged-in user's account, all their rows and all their photos (ADR 0005).
+ * Deletes the logged-in user's account, all their rows and all their photos (ADR 0006).
  * Anyone can POST to a server action, so everything is checked here, not in the page.
  */
 export async function deleteMyAccount(

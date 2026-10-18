@@ -1,4 +1,4 @@
-// Account deletion (#31, ADR 0005). Pure logic with the Supabase calls passed in, so it
+// Account deletion (#31, ADR 0006). Pure logic with the Supabase calls passed in, so it
 // can be unit-tested without a running Supabase. The server action wires in the real
 // admin client (src/app/account/delete/actions.ts).
 

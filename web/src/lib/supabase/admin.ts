@@ -11,7 +11,7 @@ import { supabaseUrl } from "./env";
  * and can use the Auth admin API, so:
  *
  * - only import it from server code ("server-only" makes a client import fail the build),
- * - only use it for the few things a user's own session can't do (ADR 0005),
+ * - only use it for the few things a user's own session can't do (ADR 0006),
  * - always take the user id from the verified session, never from request input.
  */
 export function createAdminClient() {
