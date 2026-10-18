@@ -7,6 +7,11 @@ check that the container started correctly.
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from app.observability import init_sentry
+
+# Before creating the app, so the FastAPI integration can hook into it.
+init_sentry()
+
 app = FastAPI(title="FitFinder worker")
 
 
