@@ -16,6 +16,7 @@ const valid = {
   shoeModelId: SHOE,
   size: "42.5",
   sizeSystem: "eu",
+  insoleCondition: "used",
   imagePath: `${USER}/photo.jpg`,
 };
 
@@ -27,6 +28,7 @@ describe("parseSubmission", () => {
         shoe: { kind: "existing", id: SHOE },
         size: 42.5,
         sizeSystem: "eu",
+        insoleCondition: "used",
         imagePath: `${USER}/photo.jpg`,
       },
     });
@@ -55,6 +57,9 @@ describe("parseSubmission", () => {
     ["new shoe year too old", { shoeModelId: "new", brand: "A", model: "X", year: "1980" }],
     ["new shoe year not a number", { shoeModelId: "new", brand: "A", model: "X", year: "soon" }],
     ["unknown size system", { sizeSystem: "jp" }],
+    ["no insole condition", { insoleCondition: "" }],
+    ["unknown insole condition", { insoleCondition: "worn out" }],
+    ["inherited object key as condition", { insoleCondition: "toString" }],
     ["EU size out of range", { size: "12" }],
     ["two decimals", { size: "42.25" }],
     ["size not a number", { size: "forty" }],
@@ -69,6 +74,7 @@ describe("parseSubmission", () => {
     ["US half size", { sizeSystem: "us_m", size: "9.5" }],
     ["UK size with .1 (float edge case)", { sizeSystem: "uk", size: "1.1" }],
     ["Mondopoint", { sizeSystem: "mondopoint", size: "270" }],
+    ["a new insole", { insoleCondition: "new" }],
   ])("accepts %s", (_label, override) => {
     expect(parseSubmission(form({ ...valid, ...override }), USER)).toMatchObject({ ok: true });
   });
