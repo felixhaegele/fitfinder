@@ -38,8 +38,9 @@ INSTRUCTIONS: list[tuple[str, bool]] = [
     ("1. Print on A4 at 100 % (“Actual size”). Never use “Fit to page”.", False),
     ("2. Check both rulers: each must measure exactly 100 mm.", False),
     (
-        "3. Lay the paper flat. Place the insole diagonally between the grey lines, "
-        "heel in the bottom-left corner, toes towards the top-right.",
+        "3. Lay the paper flat. Place the insole along the diagonal, inside the grey dashed "
+        "lines: heel towards the bottom-left, toes towards the top-right. Keep a little "
+        "white paper all around it.",
         False,
     ),
     (

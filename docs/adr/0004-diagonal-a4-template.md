@@ -14,7 +14,7 @@ The printed geometry (where the markers are, where the insole goes) must be know
 
 ## Decision
 
-We will place the insole **diagonally**, with the heel in the bottom-left corner and the toes towards the top-right. The measuring zone is a 120 mm wide band along the page diagonal.
+We will place the insole **diagonally**, with the heel towards the bottom-left and the toes towards the top-right, and with white paper all around it (it never touches the paper edge). The measuring zone is a 120 mm wide band along the page diagonal.
 
 We will put the 4 markers (DICT_4X4_50, IDs 0–3, 20 mm) and two 100 mm rulers, one horizontal and one vertical, in the two free triangles beside the band. Nothing dark is printed inside the band. Its edges are light-grey dashed guides.
 

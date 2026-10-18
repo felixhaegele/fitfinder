@@ -7,7 +7,7 @@ Generates the printable A4 template that users put their insole on before taking
  │ [0]     [1]   TOE ↗  ╱     │   [n]   ArUco marker (DICT_4X4_50, 20 mm)
  │ ├┼┼┼ 100 mm ┼┼┤     ╱      │   ╱ ╱   measuring zone: 120 mm band along the diagonal
  │ instructions      ╱      ╱ │
- │                 ╱  insole╱  │   Heel in the bottom-left corner,
+ │                 ╱  insole╱  │   Heel towards the bottom-left,
  │               ╱       ╱   ┤ │   toes towards the top-right.
  │             ╱       ╱  100┤ │
  │           ╱       ╱     mm┤ │
