@@ -57,3 +57,6 @@ crash.log
 # --- Generated artifacts ---
 print/out/
 worker/debug/
+
+# --- Claude Code: per-session git worktrees (see CLAUDE.md "Parallel sessions") ---
+.claude/worktrees/
