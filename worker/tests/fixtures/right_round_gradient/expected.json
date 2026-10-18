@@ -1,0 +1,60 @@
+{
+  "description": "Right insole turned the other way, strong light gradient, mild blur and noise.",
+  "expected": {
+    "length_mm": 280.0,
+    "heel_width_mm": 67.0,
+    "arch_width_mm": 60.0,
+    "ball_width_mm": 104.0,
+    "toe_width_85_mm": 92.1,
+    "toe_width_90_mm": 79.7,
+    "toe_width_95_mm": 59.3,
+    "toe_box_shape": "round"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 280,
+      "heel_width_mm": 67,
+      "arch_width_mm": 60,
+      "ball_width_mm": 104,
+      "toe_box": "round",
+      "side": "right",
+      "tone": 80,
+      "texture": 5
+    },
+    "placement": {
+      "along_mm": -8,
+      "across_mm": 4,
+      "rotation_deg": -4
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          520,
+          480
+        ],
+        [
+          2520,
+          430
+        ],
+        [
+          2860,
+          3720
+        ],
+        [
+          140,
+          3640
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 1.0,
+      "noise_sigma": 5,
+      "light_gradient": 0.45,
+      "light_angle_deg": 250,
+      "seed": 8
+    }
+  }
+}

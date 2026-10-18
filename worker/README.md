@@ -15,7 +15,12 @@ Built step by step in Milestone 5 (#20). Each step is a pure function: photo in,
 
 All tunable numbers live in `app/pipeline/config.py`. Rejection codes and their user-facing messages live in `app/pipeline/rejections.py`.
 
-Tests use **synthetic photos** (`tests/synthetic.py`). They draw the template from the JSON, then view it through a known perspective with tilt, rotation, blur, noise and dim light. The exact answer is known, so every point on the page can be checked. Realistic insole fixtures follow in #25.
+Tests use **synthetic photos** (`tests/synthetic.py`). They draw the template from the JSON, then view it through a known perspective with tilt, rotation, blur, noise and dim light. The exact answer is known, so every point on the page can be checked.
+
+**Regression fixtures** (#25) live in `tests/fixtures/<name>/expected.json`. Each one gives the measurements the pipeline must output and a `synthetic` block that describes how to draw the photo: insole shape, where it lies on the template, perspective, light, blur, noise and random seed. The photos are rendered at test time from that description, so nothing binary is committed and the results are identical on every machine.
+- The insole shapes and the exact definition of each measurement (length, heel/arch/ball width, toe widths) are in `tests/insoles.py`.
+- The tolerances and the `assert_measurements_match` helper are in `tests/regression.py`.
+- To look at the fixture photos, run `uv run python -m tests.regression /tmp/fixtures`.
 
 ## Develop
 
