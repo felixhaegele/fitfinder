@@ -51,7 +51,7 @@ Vercel deploys the app through its GitHub integration; there is no deploy job in
 | Trigger | Deploys to | Supabase project |
 |---|---|---|
 | Push to `main` | Production | `fitfinder-prod` (`usdetilhsblzfnezwdvs`) |
-| Every PR | Its own preview URL (posted on the PR) | `fitfinder-staging` (`uhmeurzjiyvciifbpwzr`) |
+| Every PR | Its own preview URL (posted on the PR) | `fitfinder-staging` (`xjusmksmnnywliwgspmf`) |
 
 - Vercel project root directory: `web/`
 - `vercel.json` pins server functions to `dub1` (Dublin): next to the Supabase projects (`eu-west-1`, Ireland), and in the EU for GDPR
@@ -61,8 +61,8 @@ Vercel deploys the app through its GitHub integration; there is no deploy job in
   | Project | Site URL | Redirect URLs |
   |---|---|---|
   | `fitfinder-prod` | `https://fitfinder-tau.vercel.app` | `https://fitfinder-tau.vercel.app/**` |
-  | `fitfinder-staging` | `https://fitfinder-felixhaegeles-projects.vercel.app` | `https://fitfinder-*-felixhaegeles-projects.vercel.app/**` |
+  | `fitfinder-staging` | `https://fitfinder-felixhaegeles-projects.vercel.app` | `https://fitfinder-prod-*-felixhaegeles-projects.vercel.app/**` |
 
-  The staging wildcard covers every preview URL (`fitfinder-<hash>-…` and `fitfinder-git-<branch>-…`). Previews are behind Vercel Authentication, so only the owner (logged in to Vercel) can open them
+  The staging wildcard covers every preview URL (`fitfinder-prod-<hash>-…` and `fitfinder-prod-git-<branch>-…`). Previews are behind Vercel Authentication, so only the owner (logged in to Vercel) can open them
 - Hosted Supabase projects get migrations via `supabase db push` (manual for now; automated in #34)
 
