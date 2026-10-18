@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fitfinder.app/schemas/template.schema.json",
+  "title": "FitFinder printable template geometry",
+  "description": "Where everything on a printed template sits, in mm (origin top-left, y down). Read by the PDF generator (print/) and the measurement worker (worker/).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "page",
+    "aruco",
+    "marker_size_mm",
+    "markers",
+    "measuring_zone",
+    "insole_axis",
+    "rulers"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "id": {
+      "description": "Template identifier, printed on the page. Bump the version whenever geometry changes.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+-v[0-9]+$"
+    },
+    "description": { "type": "string" },
+    "coordinate_system": { "type": "string" },
+    "page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width_mm", "height_mm"],
+      "properties": {
+        "width_mm": { "type": "number", "exclusiveMinimum": 0 },
+        "height_mm": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "aruco": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["dictionary", "border_bits"],
+      "properties": {
+        "dictionary": { "const": "DICT_4X4_50" },
+        "border_bits": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "marker_size_mm": {
+      "description": "Outer edge length of each marker, including its black border.",
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "markers": {
+      "description": "Top-left corner of each marker as printed (unrotated). IDs must be unique.",
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x_mm", "y_mm"],
+        "properties": {
+          "id": { "type": "integer", "minimum": 0, "maximum": 49 },
+          "x_mm": { "type": "number", "minimum": 0 },
+          "y_mm": { "type": "number", "minimum": 0 }
+        }
+      }
+    },
+    "measuring_zone": {
+      "description": "Convex polygon the insole must lie completely inside.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["points_mm"],
+      "properties": {
+        "description": { "type": "string" },
+        "points_mm": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point" } }
+      }
+    },
+    "insole_axis": {
+      "description": "Intended heel-to-toe direction. The worker uses it to tell heel from toe and to put outlines into a common frame.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["heel_mm", "toe_mm"],
+      "properties": {
+        "heel_mm": { "$ref": "#/$defs/point" },
+        "toe_mm": { "$ref": "#/$defs/point" }
+      }
+    },
+    "rulers": {
+      "description": "Scale checks for the user. Each starts at (x_mm, y_mm) and runs right (horizontal) or down (vertical).",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["x_mm", "y_mm", "length_mm", "direction", "tick_side"],
+        "properties": {
+          "x_mm": { "type": "number", "minimum": 0 },
+          "y_mm": { "type": "number", "minimum": 0 },
+          "length_mm": { "type": "number", "exclusiveMinimum": 0 },
+          "direction": { "enum": ["vertical", "horizontal"] },
+          "tick_side": { "enum": ["up", "down", "left", "right"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

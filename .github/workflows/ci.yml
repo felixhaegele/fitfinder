@@ -24,6 +24,7 @@ jobs:
       web: ${{ steps.filter.outputs.web }}
       worker: ${{ steps.filter.outputs.worker }}
       supabase: ${{ steps.filter.outputs.supabase }}
+      print: ${{ steps.filter.outputs.print }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -39,6 +40,9 @@ jobs:
             supabase:
               - 'supabase/**'
               - 'web/src/lib/database.types.ts'
+              - '.github/workflows/ci.yml'
+            print:
+              - 'print/**'
               - '.github/workflows/ci.yml'
 
   web:
@@ -142,6 +146,33 @@ jobs:
           path: worker/coverage.xml
           retention-days: 7
 
+  # Lints and tests the template generator, then publishes the PDF as a downloadable
+  # artifact so reviewers can print it without installing anything.
+  print:
+    needs: changes
+    if: needs.changes.outputs.print == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: print
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
+        with:
+          enable-cache: true
+          cache-dependency-glob: print/uv.lock
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run pytest
+      - run: uv run python -m fitfinder_template
+      - uses: actions/upload-artifact@v7
+        with:
+          name: template-pdf
+          path: print/out/*.pdf
+          retention-days: 30
+
   # Proves the Dockerfile still builds. Pushing to a registry comes with deployment (Milestone 6).
   worker-image:
     needs: changes
@@ -232,7 +263,7 @@ jobs:
   # sometimes skipped, and a required check that's skipped never reports — so this
   # job always runs and fails only if something that did run failed.
   ci-ok:
-    needs: [changes, web, e2e, worker, worker-image, supabase]
+    needs: [changes, web, e2e, worker, worker-image, supabase, print]
     if: always()
     runs-on: ubuntu-latest
     steps:
