@@ -32,7 +32,9 @@ export async function createSubmission(form: FormData): Promise<CreateSubmission
     return { error: "We couldn't save the shoe model. Please try again." };
   }
 
-  const { error } = await supabase.from("submissions").insert({
+  const { data: submission, error } = await supabase
+    .from("submissions")
+    .insert({
     shoe_model_id: shoeModelId,
     size: input.size,
     size_system: input.sizeSystem,
@@ -40,7 +42,9 @@ export async function createSubmission(form: FormData): Promise<CreateSubmission
     image_path: input.imagePath,
     // Set here, on the server, at the moment the user submitted the consented form.
     consent_at: new Date().toISOString(),
-  });
+    })
+    .select("id")
+    .single();
 
   if (error) {
     // P0429: daily limit trigger (supabase/migrations/*_submissions_daily_limit.sql)
@@ -50,7 +54,7 @@ export async function createSubmission(form: FormData): Promise<CreateSubmission
     return { error: "We couldn't save your upload. Please try again." };
   }
 
-  redirect("/account?submitted=1");
+  redirect(`/submissions/${submission.id}`);
 }
 
 async function resolveShoeModel(

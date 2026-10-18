@@ -99,14 +99,14 @@ isOneToOne: false
                   ]
                 },"submissions": {
                   Row: {
-                    "consent_at": string,"created_at": string,"id": string,"image_path": string,"insole_condition": string,"rejection_reason": string | null,"shoe_model_id": string,"size": number,"size_system": string,"status": string,"updated_at": string,"user_id": string
+                    "consent_at": string,"created_at": string,"id": string,"image_path": string,"insole_condition": string,"processed_image_path": string | null,"rejection_reason": string | null,"shoe_model_id": string,"size": number,"size_system": string,"status": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "consent_at": string,"created_at"?: string,"id"?: string,"image_path": string,"insole_condition": string,"rejection_reason"?: string | null,"shoe_model_id": string,"size": number,"size_system": string,"status"?: string,"updated_at"?: string,"user_id"?: string
+                    "consent_at": string,"created_at"?: string,"id"?: string,"image_path": string,"insole_condition": string,"processed_image_path"?: string | null,"rejection_reason"?: string | null,"shoe_model_id": string,"size": number,"size_system": string,"status"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "consent_at"?: string,"created_at"?: string,"id"?: string,"image_path"?: string,"insole_condition"?: string,"rejection_reason"?: string | null,"shoe_model_id"?: string,"size"?: number,"size_system"?: string,"status"?: string,"updated_at"?: string,"user_id"?: string
+                    "consent_at"?: string,"created_at"?: string,"id"?: string,"image_path"?: string,"insole_condition"?: string,"processed_image_path"?: string | null,"rejection_reason"?: string | null,"shoe_model_id"?: string,"size"?: number,"size_system"?: string,"status"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
