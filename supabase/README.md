@@ -39,6 +39,8 @@ supabase gen types typescript --local > web/src/lib/database.types.ts
 
 - Never edit a migration that has already been applied (merged to `main`). Add a new one instead.
 - Every table gets RLS enabled and explicit policies, in the same migration that creates it.
+- Commit the regenerated `web/src/lib/database.types.ts` with the migration. CI regenerates it and fails if it differs.
+- `seed.sql` is for local development only. Tests must not rely on it: they create their own rows with made-up names.
 
 ## Tests
 

@@ -38,6 +38,7 @@ jobs:
               - '.github/workflows/ci.yml'
             supabase:
               - 'supabase/**'
+              - 'web/src/lib/database.types.ts'
               - '.github/workflows/ci.yml'
 
   web:
@@ -142,6 +143,15 @@ jobs:
       - run: supabase db start
       - run: supabase db lint --fail-on error
       - run: supabase test db
+      # The web app's TypeScript types are generated from the schema. If a migration
+      # changed the schema but nobody regenerated them, fail here instead of at runtime.
+      - name: Check generated TS types are up to date
+        run: |
+          supabase gen types typescript --local > /tmp/database.types.ts
+          if ! diff -u web/src/lib/database.types.ts /tmp/database.types.ts; then
+            echo "::error file=web/src/lib/database.types.ts::Out of date. Run: supabase gen types typescript --local > web/src/lib/database.types.ts"
+            exit 1
+          fi
 
   # Static analysis + coverage across both packages. Skips itself when the token
   # isn't available (e.g. Dependabot PRs, which don't get repo secrets).

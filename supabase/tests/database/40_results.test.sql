@@ -8,7 +8,7 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a@example.com'),
   ('00000000-0000-0000-0000-00000000000b', 'b@example.com');
 insert into public.shoe_models (id, brand, model, year)
-  values ('10000000-0000-0000-0000-000000000001', 'Shimano', 'RC7', 2023);
+  values ('10000000-0000-0000-0000-000000000001', 'Testbrand', 'Alpha', 2023);
 insert into public.submissions (id, user_id, shoe_model_id, size, size_system, image_path, consent_at, status)
   values ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a',
           '10000000-0000-0000-0000-000000000001', 43, 'eu',

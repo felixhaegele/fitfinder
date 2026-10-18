@@ -6,7 +6,7 @@ select plan(6);
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a@example.com');
 insert into public.shoe_models (id, brand, model, year)
-  values ('10000000-0000-0000-0000-000000000001', 'Shimano', 'RC7', 2023);
+  values ('10000000-0000-0000-0000-000000000001', 'Testbrand', 'Alpha', 2023);
 
 select is(
   (select count(*) from pgmq.q_submissions)::int, 0,
