@@ -1,0 +1,31 @@
+{
+  "$schema": "./template.schema.json",
+  "id": "a4-v1",
+  "description": "A4 portrait. The insole lies diagonally, heel in the bottom-left corner and toes towards the top-right; markers and rulers sit in the two free triangles beside it.",
+  "coordinate_system": "Millimetres. Origin at the top-left corner of the page, x to the right, y down (same orientation as image pixels).",
+  "page": { "width_mm": 210, "height_mm": 297 },
+  "aruco": { "dictionary": "DICT_4X4_50", "border_bits": 1 },
+  "marker_size_mm": 20,
+  "markers": [
+    { "id": 0, "x_mm": 6, "y_mm": 6 },
+    { "id": 1, "x_mm": 60, "y_mm": 6 },
+    { "id": 2, "x_mm": 184, "y_mm": 271 },
+    { "id": 3, "x_mm": 130, "y_mm": 271 }
+  ],
+  "measuring_zone": {
+    "description": "120 mm wide band along the page diagonal, 3 mm in from the paper edges. Convex.",
+    "points_mm": [
+      [134.4, 3],
+      [207, 3],
+      [207, 108.2],
+      [75.6, 294],
+      [3, 294],
+      [3, 188.8]
+    ]
+  },
+  "insole_axis": { "heel_mm": [0, 297], "toe_mm": [210, 0] },
+  "rulers": [
+    { "x_mm": 4, "y_mm": 30, "length_mm": 100, "direction": "horizontal", "tick_side": "down" },
+    { "x_mm": 201, "y_mm": 150, "length_mm": 100, "direction": "vertical", "tick_side": "left" }
+  ]
+}

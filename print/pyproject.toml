@@ -1,0 +1,48 @@
+[project]
+name = "fitfinder-print"
+version = "0.1.0"
+description = "Generates the printable A4 template (ArUco markers + scale ruler) as a PDF."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # Only used to look up the ArUco bit patterns; the PDF itself is drawn as vectors.
+    "opencv-python-headless>=4.10",
+    "reportlab>=4.2",
+]
+
+[dependency-groups]
+dev = [
+    "jsonschema>=4.23",
+    "mypy>=2.4.0",
+    "pypdfium2>=5.14.0",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+    "types-jsonschema",
+    "types-reportlab",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "N", "S", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+strict = true
+python_version = "3.12"
+files = ["fitfinder_template", "tests"]
+
+[[tool.mypy.overrides]]
+# pypdfium2 ships no type information; it's only used in tests to rasterise the PDF.
+module = ["pypdfium2"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
