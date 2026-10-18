@@ -96,10 +96,10 @@ jobs:
           version: 2.121.0 # keep in step with the CLI used locally
       - run: pnpm install --frozen-lockfile
       # Only what the browser tests need: Postgres, Auth (gotrue), API gateway (kong),
-      # REST, Mailpit. Skipping the rest saves a minute or more.
+      # REST, Storage, Mailpit. Skipping the rest saves a minute or more.
       - name: Start Supabase
         working-directory: .
-        run: supabase start -x studio,imgproxy,realtime,storage-api,postgres-meta,edge-runtime,logflare,vector,supavisor
+        run: supabase start -x studio,imgproxy,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
       - name: Write web/.env.local from the local stack
         working-directory: .
         run: |
@@ -107,6 +107,8 @@ jobs:
           {
             echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r .API_URL /tmp/supabase.json)"
             echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r .PUBLISHABLE_KEY /tmp/supabase.json)"
+            # Local dev key, not a real secret. Tests use it to inspect stored uploads.
+            echo "SUPABASE_SECRET_KEY=$(jq -r .SECRET_KEY /tmp/supabase.json)"
           } > web/.env.local
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

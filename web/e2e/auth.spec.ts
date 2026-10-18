@@ -1,32 +1,9 @@
-import { expect, type APIRequestContext, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+
+import { magicLinkFor } from "./helpers";
 
 // Note: Next.js renders an empty role="alert" (its route announcer) on every page, so
 // alerts are matched by their text.
-
-// Local Supabase sends all email to Mailpit instead of real inboxes.
-const MAILPIT = process.env.MAILPIT_URL ?? "http://127.0.0.1:54324";
-
-type MailpitList = { messages: { ID: string; To: { Address: string }[] }[] };
-
-/** Polls Mailpit until an email for `to` arrives and returns the login link in it. */
-async function magicLinkFor(request: APIRequestContext, to: string): Promise<string> {
-  let link: string | undefined;
-  await expect
-    .poll(
-      async () => {
-        const res = await request.get(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${to}`)}`);
-        const { messages } = (await res.json()) as MailpitList;
-        if (messages.length === 0) return false;
-        const msg = await (await request.get(`${MAILPIT}/api/v1/message/${messages[0].ID}`)).json();
-        link = /href="([^"]+\/auth\/v1\/verify[^"]+)"/.exec(msg.HTML as string)?.[1];
-        return Boolean(link);
-      },
-      { timeout: 15_000, message: `no login email for ${to}` },
-    )
-    .toBe(true);
-  // The email HTML escapes & as &amp;
-  return link!.replaceAll("&amp;", "&");
-}
 
 test("log in with a magic link, see the account page, log out", async ({ page, request }) => {
   // Unique address per run, so earlier runs' emails don't interfere.

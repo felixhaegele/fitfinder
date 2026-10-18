@@ -33,6 +33,9 @@ async function AuthStatus() {
 
   return (
     <div className="flex items-center gap-4 text-sm">
+      <Link href="/upload" className="font-medium">
+        Upload
+      </Link>
       <Link href="/account" className="text-zinc-600 dark:text-zinc-400">
         {user.email}
       </Link>
