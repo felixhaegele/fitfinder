@@ -3,7 +3,7 @@
 import { type FormEvent, useId, useState } from "react";
 
 import { preparePhoto, UnsupportedPhotoError } from "@/lib/prepare-photo";
-import { NEW_SHOE, SIZE_SYSTEMS } from "@/lib/submission-form";
+import { INSOLE_CONDITIONS, NEW_SHOE, SIZE_SYSTEMS } from "@/lib/submission-form";
 import { createClient } from "@/lib/supabase/client";
 
 import { createSubmission } from "./actions";
@@ -129,6 +129,17 @@ export function UploadForm({ userId, shoeModels }: { userId: string; shoeModels:
           </select>
         </div>
       </div>
+
+      {/* No preselection: like consent, the user must actively choose. */}
+      <fieldset className="flex flex-col gap-2">
+        <legend className="text-sm font-medium">Insole condition</legend>
+        {Object.entries(INSOLE_CONDITIONS).map(([value, text]) => (
+          <label key={value} className="flex items-center gap-3 text-sm">
+            <input type="radio" name="insoleCondition" value={value} required />
+            {text}
+          </label>
+        ))}
+      </fieldset>
 
       <label className={label}>
         Photo of the insole on the template

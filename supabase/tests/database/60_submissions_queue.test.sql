@@ -17,14 +17,14 @@ select is(
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-00000000000a", "role": "authenticated"}', true);
 
-insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at)
+insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
   values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
-          '00000000-0000-0000-0000-00000000000a/one.jpg', now());
+          '00000000-0000-0000-0000-00000000000a/one.jpg', now(), 'new');
 
 -- A rejected insert (no consent) must not leave a job behind; checked by the count below.
 select throws_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path)
-    values ('10000000-0000-0000-0000-000000000001', 43, 'eu', '00000000-0000-0000-0000-00000000000a/two.jpg')$$,
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, insole_condition)
+    values ('10000000-0000-0000-0000-000000000001', 43, 'eu', '00000000-0000-0000-0000-00000000000a/two.jpg', 'new')$$,
   '23502', null,
   'an invalid submission is rejected'
 );

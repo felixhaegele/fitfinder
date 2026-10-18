@@ -1,7 +1,7 @@
 -- submissions: users create, read and delete only their own; status is worker-only.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(13);
+select plan(15);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000a', 'a@example.com'),
@@ -14,9 +14,9 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-0000-0000-00000000000a", "role": "authenticated"}', true);
 
 select lives_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at)
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
     values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
-            '00000000-0000-0000-0000-00000000000a/one.jpg', now())$$,
+            '00000000-0000-0000-0000-00000000000a/one.jpg', now(), 'new')$$,
   'a user can create a submission'
 );
 select results_eq(
@@ -25,32 +25,46 @@ select results_eq(
   'new submissions belong to the user and start as queued'
 );
 select throws_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, status)
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, status, insole_condition)
     values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
-            '00000000-0000-0000-0000-00000000000a/two.jpg', now(), 'done')$$,
+            '00000000-0000-0000-0000-00000000000a/two.jpg', now(), 'done', 'new')$$,
   '42501', null,
   'users cannot set the status'
 );
 select throws_ok(
-  $$insert into public.submissions (user_id, shoe_model_id, size, size_system, image_path, consent_at)
+  $$insert into public.submissions (user_id, shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
     values ('00000000-0000-0000-0000-00000000000b', '10000000-0000-0000-0000-000000000001', 43, 'eu',
-            '00000000-0000-0000-0000-00000000000b/two.jpg', now())$$,
+            '00000000-0000-0000-0000-00000000000b/two.jpg', now(), 'new')$$,
   '42501', null,
   'users cannot create submissions for someone else'
 );
 select throws_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at)
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
     values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
-            '00000000-0000-0000-0000-00000000000b/two.jpg', now())$$,
+            '00000000-0000-0000-0000-00000000000b/two.jpg', now(), 'new')$$,
   '23514', null,
   'image_path must be inside the user''s own folder'
 );
 select throws_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path)
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, insole_condition)
     values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
-            '00000000-0000-0000-0000-00000000000a/two.jpg')$$,
+            '00000000-0000-0000-0000-00000000000a/two.jpg', 'new')$$,
   '23502', null,
   'consent is required'
+);
+select throws_ok(
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
+    values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
+            '00000000-0000-0000-0000-00000000000a/two.jpg', now(), 'worn out')$$,
+  '23514', null,
+  'insole condition must be new or used'
+);
+select throws_ok(
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at)
+    values ('10000000-0000-0000-0000-000000000001', 43, 'eu',
+            '00000000-0000-0000-0000-00000000000a/two.jpg', now())$$,
+  '23502', null,
+  'insole condition is required (no default)'
 );
 select throws_ok(
   $$update public.submissions set status = 'done'$$,
@@ -71,8 +85,8 @@ select set_config('request.jwt.claims', '{"role": "anon"}', true);
 
 select is_empty('select id from public.submissions', 'anon sees no submissions');
 select throws_ok(
-  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at)
-    values ('10000000-0000-0000-0000-000000000001', 43, 'eu', 'x/one.jpg', now())$$,
+  $$insert into public.submissions (shoe_model_id, size, size_system, image_path, consent_at, insole_condition)
+    values ('10000000-0000-0000-0000-000000000001', 43, 'eu', 'x/one.jpg', now(), 'new')$$,
   '42501', null,
   'anon cannot create submissions'
 );
@@ -92,10 +106,10 @@ reset role;
 select is_empty('select id from public.submissions', 'users can delete their own submissions');
 
 -- Worker (service role bypasses RLS) can move status along; updated_at follows
-insert into public.submissions (id, user_id, shoe_model_id, size, size_system, image_path, consent_at, updated_at)
+insert into public.submissions (id, user_id, shoe_model_id, size, size_system, image_path, consent_at, updated_at, insole_condition)
   values ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a',
           '10000000-0000-0000-0000-000000000001', 43, 'eu',
-          '00000000-0000-0000-0000-00000000000a/three.jpg', now(), now() - interval '1 hour');
+          '00000000-0000-0000-0000-00000000000a/three.jpg', now(), now() - interval '1 hour', 'new');
 update public.submissions set status = 'processing' where id = '20000000-0000-0000-0000-000000000001';
 select ok(
   (select updated_at > now() - interval '1 minute' from public.submissions

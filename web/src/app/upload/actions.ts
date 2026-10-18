@@ -36,6 +36,7 @@ export async function createSubmission(form: FormData): Promise<CreateSubmission
     shoe_model_id: shoeModelId,
     size: input.size,
     size_system: input.sizeSystem,
+    insole_condition: input.insoleCondition,
     image_path: input.imagePath,
     // Set here, on the server, at the moment the user submitted the consented form.
     consent_at: new Date().toISOString(),

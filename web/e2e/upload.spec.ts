@@ -2,6 +2,9 @@ import { expect, test } from "@playwright/test";
 
 import { adminHeaders, logInAsNewUser, SUPABASE_URL } from "./helpers";
 
+const ONE_PIXEL_PNG =
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
 // Stands in for GPS position, camera serial etc.: any EXIF text must not survive upload.
 const METADATA_MARKER = "FITFINDER-PRIVATE-METADATA";
 
@@ -75,6 +78,7 @@ test("upload strips metadata, keeps orientation and creates a queued submission"
   await page.getByLabel("Model year").fill("2024");
   await page.getByLabel("Size", { exact: true }).fill("44.5");
   await page.getByLabel("Size system").selectOption("eu");
+  await page.getByLabel("Used (has been worn)").check();
   await page.getByLabel("Photo of the insole").setInputFiles({
     name: "insole.jpg",
     mimeType: "image/jpeg",
@@ -88,7 +92,7 @@ test("upload strips metadata, keeps orientation and creates a queued submission"
 
   // The submission exists, is queued and has consent recorded
   const res = await request.get(
-    `${SUPABASE_URL}/rest/v1/submissions?select=image_path,size,size_system,status,consent_at,shoe_models!inner(model)&shoe_models.model=eq.${encodeURIComponent(model)}`,
+    `${SUPABASE_URL}/rest/v1/submissions?select=image_path,size,size_system,insole_condition,status,consent_at,shoe_models!inner(model)&shoe_models.model=eq.${encodeURIComponent(model)}`,
     { headers: adminHeaders() },
   );
   expect(res.ok()).toBe(true);
@@ -96,11 +100,17 @@ test("upload strips metadata, keeps orientation and creates a queued submission"
     image_path: string;
     size: number;
     size_system: string;
+    insole_condition: string;
     status: string;
     consent_at: string | null;
   }[];
   expect(rows).toHaveLength(1);
-  expect(rows[0]).toMatchObject({ size: 44.5, size_system: "eu", status: "queued" });
+  expect(rows[0]).toMatchObject({
+    size: 44.5,
+    size_system: "eu",
+    insole_condition: "used",
+    status: "queued",
+  });
   expect(rows[0].consent_at).toBeTruthy();
 
   // The stored file: a JPEG without any EXIF, rotated upright before stripping
@@ -122,14 +132,11 @@ test("the form can't be submitted without consent", async ({ page, request }) =>
   await page.getByLabel("Model", { exact: true }).fill("No consent");
   await page.getByLabel("Model year").fill("2024");
   await page.getByLabel("Size", { exact: true }).fill("43");
+  await page.getByLabel("New (never worn)").check();
   await page.getByLabel("Photo of the insole").setInputFiles({
     name: "insole.png",
     mimeType: "image/png",
-    // 1×1 PNG
-    buffer: Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
-      "base64",
-    ),
+    buffer: Buffer.from(ONE_PIXEL_PNG, "base64"),
   });
   await page.getByRole("button", { name: "Upload" }).click();
 
@@ -139,6 +146,30 @@ test("the form can't be submitted without consent", async ({ page, request }) =>
     "validity.valueMissing",
     true,
   );
+});
+
+test("the form can't be submitted without choosing the insole condition", async ({
+  page,
+  request,
+}) => {
+  await logInAsNewUser(page, request, "/upload");
+  await page.getByLabel("Shoe model").selectOption({ label: "My shoe isn't listed" });
+  await page.getByLabel("Brand", { exact: true }).fill("Testbrand");
+  await page.getByLabel("Model", { exact: true }).fill("No condition");
+  await page.getByLabel("Model year").fill("2024");
+  await page.getByLabel("Size", { exact: true }).fill("43");
+  await page.getByLabel("Photo of the insole").setInputFiles({
+    name: "insole.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(ONE_PIXEL_PNG, "base64"),
+  });
+  await page.getByLabel(/I agree that FitFinder stores this photo/).check();
+  await page.getByRole("button", { name: "Upload" }).click();
+
+  // Nothing preselected, and the browser blocks the submit until one is chosen
+  await expect(page).toHaveURL(/\/upload$/);
+  await expect(page.getByLabel("New (never worn)")).not.toBeChecked();
+  await expect(page.getByLabel("Used (has been worn)")).toHaveJSProperty("validity.valueMissing", true);
 });
 
 test("logged-out visitors are sent to login", async ({ page }) => {
