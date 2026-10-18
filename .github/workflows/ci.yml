@@ -36,6 +36,7 @@ jobs:
               - '.github/workflows/ci.yml'
             worker:
               - 'worker/**'
+              - 'print/geometry/**' # the worker reads the template geometry
               - '.github/workflows/ci.yml'
             supabase:
               - 'supabase/**'
@@ -186,6 +187,8 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: worker
+          # Template geometry lives outside worker/; see the comment in worker/Dockerfile.
+          build-contexts: geometry=print/geometry
           push: false
           load: true
           tags: fitfinder-worker:ci
@@ -200,6 +203,11 @@ jobs:
           done
           docker logs worker
           exit 1
+      # Proves the geometry JSON made it into the image and OpenCV's native libs load.
+      - name: Smoke test template geometry
+        run: |
+          docker run --rm fitfinder-worker:ci python -c \
+            "from app.pipeline.template import load_template; import cv2; print(load_template().id, cv2.__version__)"
 
   # Applies every migration to a fresh Postgres, lints the schema and runs the pgTAP tests.
   # Only the database container is started (not Auth/Storage/Studio): that's all migrations
