@@ -11,10 +11,19 @@ export const SIZE_SYSTEMS = {
 
 export type SizeSystem = keyof typeof SIZE_SYSTEMS;
 
+/** Worn insoles compress and stretch, so measurements may later be treated differently. */
+export const INSOLE_CONDITIONS = {
+  new: "New (never worn)",
+  used: "Used (has been worn)",
+} as const;
+
+export type InsoleCondition = keyof typeof INSOLE_CONDITIONS;
+
 export type SubmissionInput = {
   shoe: { kind: "existing"; id: string } | { kind: "new"; brand: string; model: string; year: number };
   size: number;
   sizeSystem: SizeSystem;
+  insoleCondition: InsoleCondition;
   imagePath: string;
 };
 
@@ -74,10 +83,24 @@ export function parseSubmission(form: FormData, userId: string): ParseResult {
     };
   }
 
+  const insoleCondition = text(form, "insoleCondition");
+  if (!Object.hasOwn(INSOLE_CONDITIONS, insoleCondition)) {
+    return { ok: false, error: "Please tell us whether the insole is new or used." };
+  }
+
   const imagePath = text(form, "imagePath");
   if (!imagePath.startsWith(`${userId}/`) || imagePath.includes("..")) {
     return { ok: false, error: "The photo upload didn't finish. Please try again." };
   }
 
-  return { ok: true, value: { shoe, size, sizeSystem, imagePath } };
+  return {
+    ok: true,
+    value: {
+      shoe,
+      size,
+      sizeSystem,
+      insoleCondition: insoleCondition as InsoleCondition,
+      imagePath,
+    },
+  };
 }

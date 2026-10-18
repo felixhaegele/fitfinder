@@ -9,10 +9,10 @@ insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-00000000000b', 'b@example.com');
 insert into public.shoe_models (id, brand, model, year)
   values ('10000000-0000-0000-0000-000000000001', 'Testbrand', 'Alpha', 2023);
-insert into public.submissions (id, user_id, shoe_model_id, size, size_system, image_path, consent_at, status)
+insert into public.submissions (id, user_id, shoe_model_id, size, size_system, image_path, consent_at, status, insole_condition)
   values ('20000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-00000000000a',
           '10000000-0000-0000-0000-000000000001', 43, 'eu',
-          '00000000-0000-0000-0000-00000000000a/one.jpg', now(), 'done');
+          '00000000-0000-0000-0000-00000000000a/one.jpg', now(), 'done', 'new');
 insert into public.measurements
   (id, submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, toe_taper)
   values ('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',

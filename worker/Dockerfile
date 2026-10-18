@@ -23,6 +23,13 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY app ./app
 
+# The template geometry lives in print/geometry/, outside this build context (worker/).
+# It comes in as a *named build context*: an extra folder handed to the build, so the
+# JSON isn't copied into worker/ and the rest of the repo isn't sent to Docker.
+# Build with:  docker build --build-context geometry=../print/geometry -t fitfinder-worker .
+# Without that flag, Docker treats "geometry" as an image name and fails to pull it.
+COPY --from=geometry *.json ./geometry/
+
 # ---- Stage 2: runtime -------------------------------------------------------
 FROM python:3.12-slim AS runtime
 
@@ -34,7 +41,8 @@ COPY --from=builder --chown=app:app /app /app
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
-    PORT=8080
+    PORT=8080 \
+    TEMPLATE_GEOMETRY_DIR=/app/geometry
 
 USER app
 EXPOSE 8080
