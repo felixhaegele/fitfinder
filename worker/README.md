@@ -11,7 +11,12 @@ Built step by step in Milestone 5 (#20). Each step is a pure function: photo in,
    - Marker positions come from **`print/geometry/a4-v1.json`**, the same file the printable PDF is drawn from (ADR 0004).
    - Pixel `(x, y)` of the page image is centred on `(x/10, y/10)` mm.
    - A photo is rejected with a user-facing message when fewer than 3 markers are found (`markers_not_found`), or when the markers don't fit one flat page, e.g. curled paper (`paper_not_flat`).
-2. Segmentation (#22), measurements and outline (#23), classification (#24): coming next.
+2. **Flat page → insole outline** (`segment.py`, #22, ADR 0005). Searches only inside the measuring zone. It divides out uneven lighting (paper becomes ≈ 1.0 everywhere), thresholds halfway between paper and insole, keeps the largest blob, fills holes such as logos, and returns the outline in page mm. A photo is rejected when:
+   - the paper is too dark (`too_dark`),
+   - no insole stands out from the paper (`insole_not_found`),
+   - the insole's edge is smeared by more than 0.5 mm (`too_blurry`), or
+   - the insole crosses the dashed guides or the photo's edge (`insole_touches_edge`).
+3. Measurements and outline (#23), classification (#24): coming next.
 
 All tunable numbers live in `app/pipeline/config.py`. Rejection codes and their user-facing messages live in `app/pipeline/rejections.py`.
 
