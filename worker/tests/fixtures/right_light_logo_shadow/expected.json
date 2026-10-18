@@ -1,0 +1,60 @@
+{
+  "description": "Light grey right insole with a printed heel logo and a soft shadow; light falls off across the page.",
+  "expected": {
+    "length_mm": 262.0,
+    "heel_width_mm": 63.0,
+    "arch_width_mm": 54.0,
+    "ball_width_mm": 97.0,
+    "toe_width_85_mm": 95.1,
+    "toe_width_90_mm": 90.6,
+    "toe_width_95_mm": 79.5,
+    "toe_box_shape": "square"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 262,
+      "heel_width_mm": 63,
+      "arch_width_mm": 54,
+      "ball_width_mm": 97,
+      "toe_box": "square",
+      "side": "right",
+      "tone": 140,
+      "texture": 8,
+      "logo": true,
+      "shadow": true
+    },
+    "placement": {
+      "along_mm": -6
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          300,
+          303
+        ],
+        [
+          2700,
+          303
+        ],
+        [
+          2700,
+          3697
+        ],
+        [
+          300,
+          3697
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 4,
+      "light_gradient": 0.35,
+      "light_angle_deg": 120,
+      "seed": 6
+    }
+  }
+}

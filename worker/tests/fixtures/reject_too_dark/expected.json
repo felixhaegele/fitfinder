@@ -1,0 +1,47 @@
+{
+  "description": "Photo in very dim light: the markers are still found, but the paper is nearly black.",
+  "expected": {
+    "rejection": "too_dark"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 265,
+      "heel_width_mm": 64,
+      "arch_width_mm": 56,
+      "ball_width_mm": 98,
+      "toe_box": "round",
+      "side": "left",
+      "tone": 50
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          520,
+          480
+        ],
+        [
+          2520,
+          430
+        ],
+        [
+          2860,
+          3720
+        ],
+        [
+          140,
+          3640
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 0.17,
+      "blur_sigma": 0.0,
+      "noise_sigma": 6,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 11
+    }
+  }
+}
