@@ -56,6 +56,13 @@ Vercel deploys the app through its GitHub integration; there is no deploy job in
 - Vercel project root directory: `web/`
 - `vercel.json` pins server functions to `dub1` (Dublin): next to the Supabase projects (`eu-west-1`, Ireland), and in the EU for GDPR
 - Env vars are set in the Vercel dashboard per environment (Production / Preview): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-- Each Supabase project's **Authentication → URL Configuration** must allow the matching Vercel URLs, or magic links send people to the wrong site
+- Each Supabase project's **Authentication → URL Configuration** must allow the matching Vercel URLs. Supabase only redirects magic links to URLs on this list; anything else falls back to the Site URL:
+
+  | Project | Site URL | Redirect URLs |
+  |---|---|---|
+  | `fitfinder-prod` | `https://fitfinder-tau.vercel.app` | `https://fitfinder-tau.vercel.app/**` |
+  | `fitfinder-staging` | `https://fitfinder-felixhaegeles-projects.vercel.app` | `https://fitfinder-*-felixhaegeles-projects.vercel.app/**` |
+
+  The staging wildcard covers every preview URL (`fitfinder-<hash>-…` and `fitfinder-git-<branch>-…`). Previews are behind Vercel Authentication, so only the owner (logged in to Vercel) can open them
 - Hosted Supabase projects get migrations via `supabase db push` (manual for now; automated in #34)
 
