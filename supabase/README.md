@@ -27,7 +27,7 @@ Local URLs after `supabase start`:
 | Studio (admin UI) | http://127.0.0.1:54323 |
 | Mailpit (catches magic-link emails) | http://127.0.0.1:54324 |
 
-Copy the anon key and service-role key from `supabase status` into `.env.local` (see `.env.example`). Local keys are well-known dev values, but treat the habit seriously: hosted keys are real secrets.
+Copy the **publishable key** and **secret key** from `supabase status` into `web/.env.local` (see `.env.example`). Local keys are well-known dev values, but treat the habit seriously: hosted keys are real secrets.
 
 ## Schema changes
 

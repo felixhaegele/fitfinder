@@ -62,14 +62,54 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test:coverage
-      - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      # Proves the production build works without any Supabase env (e.g. no secrets in forks).
+      - run: pnpm build
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         with:
           name: coverage-web
           path: web/coverage/lcov.info
           retention-days: 7
+
+  # Browser tests against a real local Supabase (Auth + Mailpit), e.g. the full magic-link
+  # login. Separate from `web` so lint/unit feedback stays fast; runs when the web app or
+  # the database changes, since either can break a user flow.
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.web == 'true' || needs.changes.outputs.supabase == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: web/.nvmrc
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.121.0 # keep in step with the CLI used locally
+      - run: pnpm install --frozen-lockfile
+      # Only what the browser tests need: Postgres, Auth (gotrue), API gateway (kong),
+      # REST, Mailpit. Skipping the rest saves a minute or more.
+      - name: Start Supabase
+        working-directory: .
+        run: supabase start -x studio,imgproxy,realtime,storage-api,postgres-meta,edge-runtime,logflare,vector,supavisor
+      - name: Write web/.env.local from the local stack
+        working-directory: .
+        run: |
+          supabase status -o json > /tmp/supabase.json
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$(jq -r .API_URL /tmp/supabase.json)"
+            echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(jq -r .PUBLISHABLE_KEY /tmp/supabase.json)"
+          } > web/.env.local
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -192,7 +232,7 @@ jobs:
   # sometimes skipped, and a required check that's skipped never reports — so this
   # job always runs and fails only if something that did run failed.
   ci-ok:
-    needs: [changes, web, worker, worker-image, supabase]
+    needs: [changes, web, e2e, worker, worker-image, supabase]
     if: always()
     runs-on: ubuntu-latest
     steps:
