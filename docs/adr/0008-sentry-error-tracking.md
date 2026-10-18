@@ -1,4 +1,4 @@
-# 0007. Track errors with Sentry (EU region), scrubbing personal data before it leaves the app
+# 0008. Track errors with Sentry (EU region), scrubbing personal data before it leaves the app
 
 - **Status:** Accepted
 - **Date:** 2026-10-18
