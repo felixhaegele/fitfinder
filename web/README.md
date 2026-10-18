@@ -4,11 +4,25 @@ Next.js (App Router) frontend: TypeScript strict, Tailwind CSS, ESLint, Vitest +
 
 ## Develop
 
+The app needs the local Supabase stack (see [`supabase/README.md`](../supabase/README.md)):
+
 ```sh
+supabase start           # from the repo root
 cd web
+cp ../.env.example .env.local   # then fill in the publishable key from `supabase status`
 pnpm install
 pnpm dev                 # http://localhost:3000
 ```
+
+Login emails don't go out locally: open Mailpit at http://127.0.0.1:54324 and click the link there.
+Open it in the same browser you requested it from (PKCE flow; cross-device links are #46).
+
+## Auth in short
+
+- `src/proxy.ts` refreshes the session cookie on every request (Next.js 16 calls middleware "proxy").
+- `src/lib/auth.ts` → `getUser()` / `requireUser()`: the only place pages check who's logged in. Components that call them must sit inside `<Suspense>` (Cache Components).
+- `src/lib/supabase/{client,server,proxy}.ts`: one Supabase client per runtime.
+- `/login` → magic link email → `/auth/callback` (exchanges the code for a session) → `?next=` page.
 
 ## Check (same as CI)
 
@@ -19,6 +33,8 @@ pnpm test                # Vitest unit tests (tests/)
 pnpm test:coverage       # ...with coverage → coverage/lcov.info
 pnpm test:e2e            # Playwright: builds the app, starts it, runs e2e/ in Chromium
 ```
+
+`test:e2e` needs `supabase start` running and `.env.local` filled in: the login test reads its email from Mailpit. In CI this is the separate `e2e` job.
 
 First-time Playwright setup downloads the browser: `pnpm exec playwright install chromium`.
 
