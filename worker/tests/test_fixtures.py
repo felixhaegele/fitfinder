@@ -53,10 +53,18 @@ def test_outline_is_closed_simple_and_on_the_expected_side(side: str) -> None:
         np.sum(pts[:, 0] * np.roll(pts[:, 1], -1) - np.roll(pts[:, 0], -1) * pts[:, 1])
     )
     assert 0.6 * 260 * 98 * 0.75 < abs(area) < 260 * 98
-    # The medial side (ball bulge) is +y for a left insole, -y for a right one.
-    ball = pts[np.abs(pts[:, 0] - 0.72 * 260) < 0.5]
-    medial = ball[:, 1].max() if side == "left" else -ball[:, 1].min()
+    # Option A: heel point at the origin, toe tip at (0, length).
+    assert pts[0] == pytest.approx([0, 0], abs=1e-9)
+    assert pts[:, 1].min() == pytest.approx(0, abs=1e-9)
+    assert pts[np.argmax(pts[:, 1])] == pytest.approx([0, 260], abs=1e-9)
+    # The medial side (ball bulge) is +x for a left insole, -x for a right one.
+    ball = pts[np.abs(pts[:, 1] - 0.72 * 260) < 0.5]
+    medial = ball[:, 0].max() if side == "left" else -ball[:, 0].min()
     assert medial == pytest.approx(0.52 * 98, abs=0.2)
+    # Heel -> medial -> toe -> lateral: the first steps go to the medial side.
+    assert np.sign(pts[5, 0]) == (1 if side == "left" else -1)
+    # So a right insole runs clockwise in y-up (negative area), a left one anticlockwise.
+    assert np.sign(area) == (1 if side == "left" else -1)
 
 
 def test_non_waisted_shapes_are_refused() -> None:
@@ -118,7 +126,7 @@ def test_the_insole_is_visible_in_the_photo(measurable: RenderedFixture) -> None
     frame = measurable.frame
     length = measurable.fixture.shape.length_mm
     # A point on the axis in the midfoot (inside) and one 15 mm beyond the toe (paper).
-    inside, outside = frame.to_page(np.array([[0.5 * length, 0.0], [length + 15.0, 0.0]]))
+    inside, outside = frame.to_page(np.array([[0.0, 0.5 * length], [0.0, length + 15.0]]))
     pi, po = measurable.photo.project(np.array([inside, outside])).round().astype(int)
     assert gray[pi[1], pi[0]] + 25 < gray[po[1], po[0]]
 

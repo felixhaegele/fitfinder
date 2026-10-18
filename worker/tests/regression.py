@@ -134,28 +134,30 @@ def rejected_fixtures() -> list[Fixture]:
 
 @dataclass(frozen=True)
 class InsoleFrame:
-    """Maps between page mm and the insole frame (heel point at the origin, x to the toe)."""
+    """Maps between page mm and the insole frame (option A, see `insoles.py`): heel point
+    at the origin, toe along +y, +x on the right-hand side when walking heel -> toe."""
 
     heel_mm: FloatArray  # (2,)
-    axis: FloatArray  # unit vector heel -> toe, (2,)
-    normal: FloatArray  # unit vector of the frame's +y, (2,)
+    axis: FloatArray  # unit vector heel -> toe on the page: the frame's +y, (2,)
+    normal: FloatArray  # unit vector of the frame's +x on the page, (2,)
 
     def to_page(self, pts: FloatArray) -> FloatArray:
         return np.asarray(
-            self.heel_mm + pts[:, :1] * self.axis + pts[:, 1:2] * self.normal, np.float64
+            self.heel_mm + pts[:, 1:2] * self.axis + pts[:, :1] * self.normal, np.float64
         )
 
     def to_frame(self, pts_mm: FloatArray) -> FloatArray:
         d = np.asarray(pts_mm, np.float64) - self.heel_mm
-        return np.column_stack([d @ self.axis, d @ self.normal])
+        return np.column_stack([d @ self.normal, d @ self.axis])
 
 
 def insole_frame(fixture: Fixture, template: Template) -> InsoleFrame:
     (hx, hy), (tx, ty) = template.heel_mm, template.toe_mm
     angle = np.arctan2(ty - hy, tx - hx) + np.deg2rad(fixture.placement.rotation_deg)
     axis = np.array([np.cos(angle), np.sin(angle)])
-    # +y of the frame is the right-hand side when walking heel -> toe, seen from above
-    # (image coordinates, y down). For a left insole that's the medial side.
+    # +x of the frame is the right-hand side when walking heel -> toe, seen from above
+    # (page coordinates are y down, so that's the axis turned 90 degrees clockwise on
+    # screen). For a left insole that's the medial side.
     normal = np.array([-axis[1], axis[0]])
     template_axis = np.array([tx - hx, ty - hy]) / np.hypot(tx - hx, ty - hy)
     template_normal = np.array([-template_axis[1], template_axis[0]])
@@ -203,7 +205,7 @@ def _draw_insole(
         grain = rng.normal(0, look.texture, page.shape)
         insole += cv2.GaussianBlur(grain, (0, 0), 0.8)
     if look.logo:
-        centre_mm = frame.to_page(np.array([[0.22 * fx.shape.length_mm, 0.0]]))[0]
+        centre_mm = frame.to_page(np.array([[0.0, 0.22 * fx.shape.length_mm]]))[0]
         centre = tuple(int(v) for v in np.round(centre_mm * r - 0.5))
         angle = float(np.degrees(np.arctan2(frame.axis[1], frame.axis[0])))
         cv2.ellipse(insole, centre, (18 * r, 10 * r), angle, 0, 360, min(look.tone + 110, 230), -1)
