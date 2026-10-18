@@ -27,13 +27,13 @@ The workflow mints a short-lived token from a **GitHub App** (`actions/create-gi
 ## Alternatives considered
 
 - **Per-package releases** (`web`, `worker`, `print` each with their own version, changelog and tags `worker-v0.3.0`): more accurate per component, but for a solo project deployed as one unit it means three changelogs to read, a combined release PR to reason about, and per-package lockfile bumping to solve. We can split later by adding packages to the config.
-- **Fine-grained personal access token** as the release token: simpler to set up than an App, but tied to the owner's account, long-lived (max 1 year, then releases silently break), and every release PR would look authored by the owner. An App token expires after an hour and acts as a separate bot identity.
+- **Fine-grained personal access token** as the release token: simpler to set up than an App, but tied to the owner's account, long-lived (max 1 year, then releases fail until someone rotates it), and every release PR would look authored by the owner. An App token expires after an hour and acts as a separate bot identity.
 - **`GITHUB_TOKEN` only, plus manual close/reopen:** no setup, but an easy-to-forget manual step on every release. Kept only as the fallback.
 - **semantic-release / changesets:** semantic-release releases on every merge (no review step); changesets wants a file per change and is JS-centric. release-please's reviewable release PR fits GitHub Flow best.
 
 ## Consequences
 
 - Merging a PR to `main` updates (or opens) the release PR. Merging the release PR creates the tag and GitHub Release. Nothing is deployed by a release yet; deploys still happen on merge to `main`.
-- PR titles matter more: `feat:` bumps minor, `fix:` bumps patch, `!` / `BREAKING CHANGE:` marks a breaking change (minor while on `0.x`). A `Release-As: x.y.z` footer in a commit body forces a version.
+- PR titles matter more: `feat:` bumps minor, `!` / `BREAKING CHANGE:` marks a breaking change (minor while on `0.x`), and every other type with a visible changelog section (`fix`, `perf`, `revert`, `refactor`, `docs`, `ci`) bumps patch. Hidden types (`chore`, `test`, `build`, `style`) never trigger a release by themselves. A `Release-As: x.y.z` footer in a commit body forces a version.
 - The owner must create and install the GitHub App and enable "Allow GitHub Actions to create and approve pull requests" (see PR #76).
 - If we ever want the version inside the apps (e.g. Sentry release names), read `version.txt` or the tag in CI rather than the package manifests.
