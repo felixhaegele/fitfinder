@@ -87,8 +87,9 @@ test("upload strips metadata, keeps orientation and creates a queued submission"
   await page.getByLabel(/I agree that FitFinder stores this photo/).check();
   await page.getByRole("button", { name: "Upload" }).click();
 
-  await expect(page).toHaveURL(/\/account\?submitted=1$/);
-  await expect(page.getByRole("status")).toContainText("queued for measuring");
+  // Straight to the new submission's status page
+  await expect(page).toHaveURL(/\/submissions\/[0-9a-f-]{36}$/);
+  await expect(page.getByRole("status")).toContainText("Waiting to be measured");
 
   // The submission exists, is queued and has consent recorded
   const res = await request.get(
