@@ -21,8 +21,10 @@ jobs:
     permissions:
       pull-requests: read
     outputs:
-      web: ${{ steps.filter.outputs.web }}
-      worker: ${{ steps.filter.outputs.worker }}
+      # On pushes to main, always test web and worker: SonarQube Cloud compares PRs against
+      # main, so main's analysis needs coverage for the whole repo, not just what changed.
+      web: ${{ github.event_name == 'push' && 'true' || steps.filter.outputs.web }}
+      worker: ${{ github.event_name == 'push' && 'true' || steps.filter.outputs.worker }}
       supabase: ${{ steps.filter.outputs.supabase }}
       print: ${{ steps.filter.outputs.print }}
     steps:
@@ -256,14 +258,19 @@ jobs:
         if: env.SONAR_TOKEN != ''
         # Reports contain paths relative to each package (src/..., app/...);
         # Sonar resolves them from the repo root, so prefix the package directory.
+        # Found by name: with a single artifact, download-artifact extracts it straight into
+        # coverage/; with several, into coverage/<artifact-name>/.
         run: |
           mkdir -p web/coverage
-          if [ -f coverage/coverage-web/lcov.info ]; then
-            sed 's#^SF:#SF:web/#' coverage/coverage-web/lcov.info > web/coverage/lcov.info
+          lcov=$(find coverage -name lcov.info | head -n 1)
+          if [ -n "$lcov" ]; then
+            sed 's#^SF:#SF:web/#' "$lcov" > web/coverage/lcov.info
           fi
-          if [ -f coverage/coverage-worker/coverage.xml ]; then
-            sed 's#<source>app</source>#<source>worker/app</source>#' coverage/coverage-worker/coverage.xml > worker/coverage.xml
+          cobertura=$(find coverage -name coverage.xml | head -n 1)
+          if [ -n "$cobertura" ]; then
+            sed 's#<source>app</source>#<source>worker/app</source>#' "$cobertura" > worker/coverage.xml
           fi
+          echo "web coverage: ${lcov:-none}, worker coverage: ${cobertura:-none}"
       - uses: SonarSource/sonarqube-scan-action@v8
         if: env.SONAR_TOKEN != ''
       - if: env.SONAR_TOKEN == ''
