@@ -57,9 +57,8 @@ export default function PrivacyPage() {
             (Ireland).
           </li>
           <li>
-            The website is hosted by <strong>Vercel</strong>. The code that handles your data runs
-            in the EU (Dublin, Ireland); pages are delivered through Vercel&apos;s worldwide
-            network.
+            The website is hosted by <strong>Vercel</strong>, which runs its server functions in
+            Dublin (Ireland). Pages are delivered through Vercel&apos;s worldwide network.
           </li>
           <li>The service that measures your photos also runs in an EU region.</li>
           <li>
@@ -72,8 +71,8 @@ export default function PrivacyPage() {
             from it before it leaves our app.
           </li>
           <li>
-            Our hosting providers keep technical logs (for example IP addresses) for a short time
-            to run and protect the service.
+            Our hosting providers keep technical logs (for example IP addresses) to run and
+            protect the service.
           </li>
         </ul>
       </Section>
@@ -110,13 +109,14 @@ export default function PrivacyPage() {
 
       <Section title="What is public">
         <p>
-          The shoe pages show measurements <strong>per shoe model</strong>, combined from
-          everyone&apos;s uploads: how many insoles were measured, typical lengths and widths, and
-          the most common fit labels. They never show photos, email addresses or who uploaded what.
+          The shoe pages show measurements <strong>per shoe model and size</strong>, combined
+          from everyone&apos;s uploads: how many insoles were measured, typical lengths and widths,
+          and the most common fit labels. They never show photos, email addresses or who uploaded
+          what.
         </p>
         <p>
-          If only one person has measured a shoe, its figures come from that one insole. They
-          describe the shoe, not you.
+          If only one person has measured a shoe in a given size, its figures come from that one
+          insole. They describe the shoe, not you.
         </p>
       </Section>
 
