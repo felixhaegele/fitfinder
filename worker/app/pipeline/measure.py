@@ -261,7 +261,7 @@ def measure_frame(frame: FloatArray) -> dict[str, float]:
     def region(lo: float, hi: float) -> FloatArray:
         ys = y0 + length * np.linspace(lo, hi, _REGION_SAMPLES)
         # A line exactly through the heel point or toe tip has zero width; skip it.
-        return widths_along(frame, ys[1:-1] if lo == 0.0 or hi == 1.0 else ys)
+        return widths_along(frame, ys[1:-1] if lo <= 0.0 or hi >= 1.0 else ys)
 
     toe = widths_along(frame, y0 + length * np.array(TOE_WIDTH_AT))
     return {
