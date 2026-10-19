@@ -16,7 +16,7 @@ Built step by step in Milestone 5 (#20). Each step is a pure function: photo in,
    - no insole stands out from the paper (`insole_not_found`),
    - the insole's edge is smeared by more than 0.5 mm (`too_blurry`), or
    - the insole crosses the dashed guides or the photo's edge (`insole_touches_edge`).
-3. **Outline → measurements** (`measure.py`, #23) and **classification** (`classify.py`, #24). `process.py` wires them together for the worker. An outline that can't be measured is rejected too.
+3. **Outline → measurements** (`measure.py`, #23) and **classification** (`classify.py`, #24). `process.py` wires them together for the worker.
 
 To try the pipeline on one photo, use the [measure CLI](#measure-one-photo-cli).
 
