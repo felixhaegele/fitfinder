@@ -50,6 +50,8 @@ test("status page updates by itself and shows results and both photos", async ({
   await expect(page.getByText("272.5 mm")).toBeVisible();
   await expect(page.getByText("98.2 mm")).toBeVisible();
   await expect(page.getByText("Wide", { exact: true })).toBeVisible();
+  await expect(page.getByText("Egyptian (big toe longest)")).toBeVisible();
+  await expect(page.getByText("not your own foot")).toBeVisible();
   await expect(page.getByRole("img", { name: "The photo you uploaded" })).toBeVisible();
   await expect(page.getByRole("img", { name: "re-encoded by FitFinder" })).toBeVisible();
 
