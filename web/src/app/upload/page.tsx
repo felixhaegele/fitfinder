@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { requireUser } from "@/lib/auth";
@@ -16,6 +17,13 @@ export default function UploadPage() {
         <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
           Place the shoe&apos;s insole on the printed FitFinder template and take a photo from
           straight above, with all four corner markers visible.
+        </p>
+        <p className="mt-2 text-sm">
+          No template yet?{" "}
+          <Link href="/template" className="font-medium underline">
+            Download and print it
+          </Link>
+          .
         </p>
       </div>
       <Suspense fallback={<p className="text-zinc-500">Loading…</p>}>
