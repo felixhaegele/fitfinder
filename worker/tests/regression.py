@@ -4,7 +4,9 @@ Each fixture is a folder `tests/fixtures/<name>/` with an `expected.json`:
 
 - `description`: one sentence on what the fixture exercises.
 - `expected`: what the pipeline must output. Either the measurements (definitions in
-  `insoles.py`) or `{"rejection": "<code>"}` for a photo that must be refused.
+  `insoles.py`) and the classifier's labels (`width_class`, `arch_class`,
+  `toe_box_shape`, `toe_shape`), or `{"rejection": "<code>"}` for a photo that must be
+  refused.
 - `synthetic`: how to draw the photo, namely the insole shape, where it lies on the
   template, and how the camera sees the page (perspective, light, blur, noise, seed).
 
@@ -58,6 +60,11 @@ class Expected:
     rejection: str | None = None
     measurements: dict[str, float] = field(default_factory=dict)
     toe_box_shape: str | None = None
+    # Foot-shape labels the classifier (#24) must give. toe_box_shape is one of them.
+    classes: dict[str, str] = field(default_factory=dict)
+
+
+CLASS_KEYS = ("width_class", "arch_class", "toe_box_shape", "toe_shape")
 
 
 @dataclass(frozen=True)
@@ -97,6 +104,7 @@ def _expected(raw: Mapping[str, Any]) -> Expected:
     return Expected(
         measurements={k: float(raw[k]) for k in MEASUREMENT_KEYS},
         toe_box_shape=str(raw["toe_box_shape"]),
+        classes={k: str(raw[k]) for k in CLASS_KEYS},
     )
 
 
@@ -251,6 +259,17 @@ def assert_measurements_match(
         )
     if problems:
         raise AssertionError("measurements out of tolerance:\n  " + "\n  ".join(problems))
+
+
+def assert_classes_match(classes: Mapping[str, str], expected: Expected) -> None:
+    """Fail with every label that differs from the fixture's, not only the first."""
+    wrong = [
+        f"{k}: {classes.get(k)!r}, expected {want!r}"
+        for k, want in expected.classes.items()
+        if classes.get(k) != want
+    ]
+    if wrong:
+        raise AssertionError("wrong labels:\n  " + "\n  ".join(wrong))
 
 
 def main(out_dir: str) -> None:

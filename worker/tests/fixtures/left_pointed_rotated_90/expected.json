@@ -8,7 +8,10 @@
     "toe_width_85_mm": 68.3,
     "toe_width_90_mm": 52.9,
     "toe_width_95_mm": 33.3,
-    "toe_box_shape": "pointed"
+    "toe_box_shape": "pointed",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "greek"
   },
   "synthetic": {
     "insole": {

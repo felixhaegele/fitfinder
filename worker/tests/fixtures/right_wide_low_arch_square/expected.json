@@ -1,0 +1,61 @@
+{
+  "description": "Wide right insole with a low (flat) arch and a square, Roman toe end (level across the first toes).",
+  "expected": {
+    "length_mm": 255.0,
+    "heel_width_mm": 68.0,
+    "arch_width_mm": 64.0,
+    "ball_width_mm": 104.0,
+    "toe_width_85_mm": 101.9,
+    "toe_width_90_mm": 97.1,
+    "toe_width_95_mm": 85.2,
+    "toe_box_shape": "square",
+    "width_class": "wide",
+    "arch_class": "low",
+    "toe_shape": "roman"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 255,
+      "heel_width_mm": 68,
+      "arch_width_mm": 64,
+      "ball_width_mm": 104,
+      "toe_box": "square",
+      "side": "right",
+      "tone": 65,
+      "texture": 4
+    },
+    "placement": {
+      "along_mm": -6
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          420,
+          380
+        ],
+        [
+          2600,
+          420
+        ],
+        [
+          2680,
+          3640
+        ],
+        [
+          360,
+          3600
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.7,
+      "noise_sigma": 4,
+      "light_gradient": 0.3,
+      "light_angle_deg": 160,
+      "seed": 22
+    }
+  }
+}
