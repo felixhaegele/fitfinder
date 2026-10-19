@@ -83,6 +83,38 @@ class JobStore(Protocol):
         ...
 
 
+def measurement_params(submission_id: UUID, m: MeasurementRow) -> tuple[object, ...]:
+    """Parameters for the measurements insert, in column order.
+
+    Pure, so the mapping is unit-tested without a database. The outline goes in as a JSON
+    array of [x, y] pairs, which is what the `outline_mm` check constraint expects.
+    """
+    return (
+        submission_id,
+        m.pipeline_version,
+        m.side,
+        m.length_mm,
+        m.ball_width_mm,
+        m.heel_width_mm,
+        m.arch_width_mm,
+        Jsonb([[x, y] for x, y in m.outline_mm]),
+        m.toe_taper,
+        Jsonb(dict(m.extra)),
+    )
+
+
+def classification_params(measurement_id: object, c: ClassificationRow) -> tuple[object, ...]:
+    """Parameters for the classifications insert, in column order."""
+    return (
+        measurement_id,
+        c.classifier_version,
+        c.width_class,
+        c.arch_class,
+        c.toe_box_shape,
+        c.toe_shape,
+    )
+
+
 class PostgresJobStore:
     def __init__(self, conn: psycopg.Connection[dict[str, Any]], queue: str) -> None:
         self._conn = conn
@@ -170,34 +202,20 @@ class PostgresJobStore:
             if finish.measurement is not None:
                 m = finish.measurement
                 row = self._conn.execute(
-                    "insert into public.measurements (submission_id, pipeline_version,"
-                    " length_mm, ball_width_mm, heel_width_mm, arch_width_mm, toe_taper, extra)"
-                    " values (%s, %s, %s, %s, %s, %s, %s, %s) returning id",
-                    (
-                        submission_id,
-                        m.pipeline_version,
-                        m.length_mm,
-                        m.ball_width_mm,
-                        m.heel_width_mm,
-                        m.arch_width_mm,
-                        m.toe_taper,
-                        Jsonb(dict(m.extra)),
-                    ),
+                    "insert into public.measurements (submission_id, pipeline_version, side,"
+                    " length_mm, ball_width_mm, heel_width_mm, arch_width_mm, outline_mm,"
+                    " toe_taper, extra)"
+                    " values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) returning id",
+                    measurement_params(submission_id, m),
                 ).fetchone()
                 assert row is not None  # noqa: S101 - insert ... returning always returns
                 if finish.classification is not None:
                     c = finish.classification
                     self._conn.execute(
                         "insert into public.classifications (measurement_id,"
-                        " classifier_version, width_class, arch_class, toe_box_shape)"
-                        " values (%s, %s, %s, %s, %s)",
-                        (
-                            row["id"],
-                            c.classifier_version,
-                            c.width_class,
-                            c.arch_class,
-                            c.toe_box_shape,
-                        ),
+                        " classifier_version, width_class, arch_class, toe_box_shape, toe_shape)"
+                        " values (%s, %s, %s, %s, %s, %s)",
+                        classification_params(row["id"], c),
                     )
             self.archive(msg_id)
             return FinishOutcome.WRITTEN

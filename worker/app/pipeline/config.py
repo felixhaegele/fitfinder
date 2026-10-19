@@ -4,6 +4,13 @@ Changing any of these can move measurement results, so a change must keep the fi
 regression tests (#25) within tolerance or be deliberate.
 """
 
+# Stored on every measurements row, so old submissions can be re-measured and results from
+# different pipeline versions are never mixed. **Bump it whenever a number in this file up
+# to the classification section changes**, or the markers/warp/segment/measure logic does:
+# patch = a threshold nudge, minor = a new measurement, major = a different frame or
+# definition. The classifier has its own CLASSIFIER_VERSION below.
+PIPELINE_VERSION = "1.0.0"
+
 # Resolution of the flattened top-down page image. 10 px/mm makes an A4 page 2100 x 2970 px:
 # fine enough for 0.1 mm rounding, small enough to process in well under a second.
 PX_PER_MM = 10.0

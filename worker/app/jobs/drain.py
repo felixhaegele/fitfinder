@@ -27,6 +27,7 @@ from app.jobs.process import DEFAULT_ANALYZER
 from app.jobs.sandbox import Processed, analyse_upload, run_isolated
 from app.jobs.storage import Storage, SupabaseStorage
 from app.jobs.store import JobStore, PostgresJobStore
+from app.observability import init_sentry
 
 log = logging.getLogger("app.jobs.drain")
 
@@ -75,6 +76,7 @@ def drain(
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
+    init_sentry()  # no-op without SENTRY_DSN (#35)
     settings = Settings.from_env()
     with (
         PostgresJobStore.connect(settings.db_url) as store,
