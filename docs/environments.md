@@ -50,9 +50,8 @@ All accounts belong to the owner and use GitHub login.
 | `SUPABASE_SECRET_KEY` | **secret**, bypasses RLS | `web/.env.local` (local dev key); **Vercel: still to be added as Secret** for account deletion (#65) | web server only (`web/src/lib/supabase/admin.ts`), e2e tests |
 | `SONAR_TOKEN` | secret | GitHub repo secret (Actions) | CI `sonar` job |
 | `SUPABASE_ACCESS_TOKEN` | secret | GitHub Environments `staging` and `production` | `db-deploy.yml` |
-| `SUPABASE_DB_PASSWORD` | secret, different per project | GitHub Environments `staging` / `production` | `db-deploy.yml` |
 | `SUPABASE_PROJECT_REF` | variable (not secret) | GitHub Environments `staging` / `production` | `db-deploy.yml` |
-| Database passwords | secrets | owner's password manager only | `supabase link` / `db push` |
+| Database passwords | secrets | owner's password manager only | direct `psql` access. Not needed by CI or the CLI: they log in through the access token |
 
 Rules: `NEXT_PUBLIC_*` values end up in the browser bundle, so never give a secret that prefix. Secrets go in the dashboard or `gh secret set` from the owner's own terminal, never into chat, code or committed files. When adding a variable, also add it to `.env.example`.
 
@@ -70,7 +69,7 @@ GitHub Environments: `staging` (any branch can read its secrets; the workflow on
 
 Migrations only go forward: a rollback is a new migration that undoes the change. That's why staging always goes first.
 
-**Manually** (e.g. the first setup, or to re-seed staging), from the repo root in the owner's terminal (it asks for the database password):
+**Manually** (e.g. the first setup, or to re-seed staging), from the repo root in the owner's terminal. After `supabase login`, the CLI logs in to the database through a temporary role ("Initialising login role..."); no database password is needed:
 
 ```sh
 supabase link --project-ref xjusmksmnnywliwgspmf   # staging
@@ -108,6 +107,7 @@ Local values are in `supabase/config.toml` (`[auth]`).
 ## Gotchas we hit
 
 - **Supabase CLI in a non-interactive shell:** `supabase migration new` waits for SQL on stdin and hangs. Run CLI commands with `</dev/null`.
+- **A local `supabase migration list` doesn't test the database password:** once logged in, the CLI uses a temporary login role through the access token. A wrong `SUPABASE_DB_PASSWORD` in CI kept failing while everything worked locally (#89). CI now uses the access token too.
 - **Vercel env vars are build-time:** a preview built before the Preview variables existed fails on every request with "Missing environment variable NEXT_PUBLIC_SUPABASE_URL".
 - **Redirects must be relative** in route handlers (`web/src/app/auth/callback/route.ts`): an absolute URL built from `request.nextUrl` can name a different host (localhost vs 127.0.0.1, or an internal proxy host), and the session cookie is then lost.
 - **Next.js renders an empty `role="alert"`** (its route announcer) on every page. In Playwright, match alerts by text.

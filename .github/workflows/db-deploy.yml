@@ -5,8 +5,12 @@ name: Database deploy
 #   merge/main  → staging, then production after the owner approves in GitHub
 #
 # Secrets live in the GitHub Environments "staging" and "production" (see
-# docs/environments.md): SUPABASE_ACCESS_TOKEN, SUPABASE_DB_PASSWORD and the variable
-# SUPABASE_PROJECT_REF. "production" only accepts the main branch and needs approval.
+# docs/environments.md): SUPABASE_ACCESS_TOKEN and the variable SUPABASE_PROJECT_REF.
+# "production" only accepts the main branch and needs approval.
+#
+# No database password: without SUPABASE_DB_PASSWORD the CLI creates a temporary login
+# role through the access token ("Initialising login role..."). One secret less, and
+# resetting a database password can't break deploys.
 
 on:
   push:
@@ -36,7 +40,6 @@ jobs:
     environment: staging
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
@@ -57,7 +60,6 @@ jobs:
     environment: staging
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
@@ -74,7 +76,6 @@ jobs:
     environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
