@@ -92,7 +92,8 @@ def outline_for_db(outline_mm: FloatArray) -> Outline:
         raise ValueError("outline has non-finite coordinates")
     # Mirroring a left insole turns 0.0 into -0.0; adding 0.0 makes it +0.0 again.
     pts = np.round(pts, 2) + 0.0
-    if pts[0, 0] != 0.0 or pts[0, 1] != 0.0:
+    # After rounding to 0.01 mm, "not exactly 0" is the same as "magnitude above 0".
+    if np.abs(pts[0]).max() > 0.0:
         raise ValueError(f"outline must start at the heel point (0, 0), got {pts[0].tolist()}")
     return tuple((float(x), float(y)) for x, y in pts)
 
