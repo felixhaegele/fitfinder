@@ -4,10 +4,10 @@ import { safeNextPath } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * The magic link lands here with a one-time ?code=. Exchanging it needs the "code
- * verifier" cookie set when the link was requested, so it only works in that browser
- * (PKCE; cross-device links are #46). On success the session cookies are set and the
- * user continues to ?next=.
+ * PKCE code exchange: the default Supabase magic link (?code=), which only works in the
+ * browser that requested it. Our email templates now link to /auth/confirm instead
+ * (#46); this route stays for links sent before that change and for a hosted project
+ * whose dashboard templates haven't been updated yet.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

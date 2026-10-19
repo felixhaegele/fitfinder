@@ -15,14 +15,14 @@ pnpm dev                 # http://localhost:3000
 ```
 
 Login emails don't go out locally: open Mailpit at http://127.0.0.1:54324 and click the link there.
-Open it in the same browser you requested it from (PKCE flow; cross-device links are #46).
+The link works in any browser, e.g. request it on the laptop and open it on your phone.
 
 ## Auth in short
 
 - `src/proxy.ts` refreshes the session cookie on every request (Next.js 16 calls middleware "proxy").
 - `src/lib/auth.ts` → `getUser()` / `requireUser()`: the only place pages check who's logged in. Components that call them must sit inside `<Suspense>` (Cache Components).
 - `src/lib/supabase/{client,server,proxy}.ts`: one Supabase client per runtime.
-- `/login` → magic link email → `/auth/callback` (exchanges the code for a session) → `?next=` page.
+- `/login` → magic link email → `/auth/confirm` (verifies the one-time token hash, so it works on any device) → `?next=` page. Email text: `supabase/templates/`. `/auth/callback` (PKCE code exchange) stays for older links.
 
 ## Upload in short
 

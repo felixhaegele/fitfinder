@@ -97,6 +97,17 @@ Per project: `https://supabase.com/dashboard/project/<project-id>/auth/url-confi
 
 Local values are in `supabase/config.toml` (`[auth]`).
 
+### Login email templates
+
+Magic links point to the app's `/auth/confirm` with a one-time token hash, so they work in any browser (#46). The text lives in [`supabase/templates/`](../supabase/templates/); locally `config.toml` loads it. **Hosted projects need it pasted into the dashboard**, per project: `https://supabase.com/dashboard/project/<project-id>/auth/templates`
+
+| Template | Subject | Body |
+|---|---|---|
+| **Magic Link** | `Your FitFinder login link` | contents of `supabase/templates/magic_link.html` |
+| **Confirm signup** | `Your FitFinder login link` | contents of `supabase/templates/confirmation.html` |
+
+Until a project has the new templates, Supabase sends its default PKCE link. `/auth/confirm` accepts that too (it only works in the requesting browser), so login never breaks in between.
+
 ### SonarQube Cloud
 
 - **Automatic Analysis is off** (project → Administration → Analysis Method). Our CI scanner sends the analysis instead, because only CI has the coverage reports. Both at once makes the CI scan fail.

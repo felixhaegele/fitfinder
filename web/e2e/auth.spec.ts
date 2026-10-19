@@ -36,10 +36,39 @@ test("log in with a magic link, see the account page, log out", async ({ page, r
   await expect(page).toHaveURL(/\/login/);
 });
 
+test("the login link works in a different browser (cross-device)", async ({
+  browser,
+  page,
+  request,
+}) => {
+  const email = `e2e-xdevice-${Date.now()}@example.com`;
+
+  // "Laptop": request the link
+  await page.goto("/login");
+  await page.getByLabel("Email").fill(email);
+  await page.getByRole("button", { name: "Send me a login link" }).click();
+  await expect(page.getByRole("status")).toContainText(email);
+
+  // "Phone": a fresh browser context shares no cookies with the one above
+  const phone = await (await browser.newContext()).newPage();
+  await phone.goto(await magicLinkFor(request, email));
+  await expect(phone).toHaveURL(/\/account$/);
+  await expect(phone.getByText(`Logged in as ${email}`)).toBeVisible();
+});
+
 test("an invalid login link shows a clear error", async ({ page }) => {
-  await page.goto("/auth/callback?code=not-a-real-code");
-  await expect(page).toHaveURL(/\/login\?error=link/);
-  await expect(page.getByRole("alert").filter({ hasText: "invalid or has expired" })).toBeVisible();
+  for (const link of [
+    "/auth/confirm?token_hash=not-a-real-token&type=email&next=%2Faccount",
+    "/auth/confirm?next=%2Faccount",
+    "/auth/confirm?code=not-a-real-code&next=%2Faccount",
+    "/auth/callback?code=not-a-real-code",
+  ]) {
+    await page.goto(link);
+    await expect(page).toHaveURL(/\/login\?error=link/);
+    await expect(
+      page.getByRole("alert").filter({ hasText: "invalid or has expired" }),
+    ).toBeVisible();
+  }
 });
 
 test("rejects an invalid email without sending anything", async ({ page }) => {
