@@ -18,7 +18,11 @@ export const test = base.extend({
     // Stored in MCR's cache dir; e2e/coverage-report.mjs merges it with the server's.
     const report = MCR(coverageOptions);
     const start = () => page.coverage.startJSCoverage({ resetOnNavigation: false });
-    const save = async () => report.add(await page.coverage.stopJSCoverage());
+    const save = async () => {
+      // Empty before the first page load (the about:blank tab); MCR rejects an empty list.
+      const coverage = await page.coverage.stopJSCoverage();
+      if (coverage.length > 0) await report.add(coverage);
+    };
 
     // A full page load (page.goto) throws away the previous document's scripts, and with
     // them their coverage. So save what we have before every goto. Client-side navigation
