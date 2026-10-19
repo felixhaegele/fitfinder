@@ -19,6 +19,7 @@ import os
 import uuid
 from collections.abc import Iterator
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 import cv2
@@ -32,7 +33,8 @@ from app.jobs.drain import drain, sandboxed_runner
 from app.jobs.process import ClassificationRow, MeasurementRow
 from app.jobs.storage import SupabaseStorage
 from app.jobs.store import Finish, FinishOutcome, PostgresJobStore
-from tests.regression import measurable_fixtures, render_fixture
+from app.pipeline import config as pipeline_config
+from tests.regression import TOLERANCE_MM, Fixture, load_fixture, render_fixture
 
 ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_DB_URL")
 
@@ -131,11 +133,54 @@ def stack() -> Iterator[Stack]:
         conn.close()
 
 
-def photo_jpeg() -> bytes:
-    rendered = render_fixture(measurable_fixtures()[0])
+FIXTURES = Path(__file__).parent / "fixtures"
+LEFT = "left_round_straight"
+RIGHT = "right_round_gradient"
+
+
+def fixture(name: str) -> Fixture:
+    return load_fixture(FIXTURES / name)
+
+
+def photo_jpeg(name: str = RIGHT) -> bytes:
+    rendered = render_fixture(fixture(name))
     ok, buf = cv2.imencode(".jpg", rendered.photo.image, [cv2.IMWRITE_JPEG_QUALITY, 95])
     assert ok
     return buf.tobytes()
+
+
+@pytest.mark.parametrize("name", [LEFT, RIGHT])
+def test_drain_measures_and_classifies(stack: Stack, name: str) -> None:
+    """Photo -> queue -> worker -> measurements + classifications rows (#84)."""
+    sid = stack.submit(photo_jpeg(name))
+
+    drain(stack.store, stack.storage, sandboxed_runner())
+
+    assert stack.submission(sid)["status"] == "done"
+    rows = stack.conn.execute(
+        "select m.*, c.classifier_version, c.width_class, c.arch_class, c.toe_box_shape,"
+        " c.toe_shape from public.measurements m"
+        " join public.classifications c on c.measurement_id = m.id"
+        " where m.submission_id = %s",
+        (sid,),
+    ).fetchall()
+    assert len(rows) == 1
+    row = rows[0]
+    expected = fixture(name)
+    assert row["pipeline_version"] == pipeline_config.PIPELINE_VERSION
+    assert row["classifier_version"] == pipeline_config.CLASSIFIER_VERSION
+    assert row["side"] == expected.shape.side
+    for key in ("length_mm", "heel_width_mm", "arch_width_mm", "ball_width_mm"):
+        assert abs(float(row[key]) - expected.expected.measurements[key]) <= TOLERANCE_MM[key]
+    outline = row["outline_mm"]
+    assert len(outline) == 256
+    assert outline[0] == [0, 0]
+    assert set(row["extra"]) == {"toe_width_85_mm", "toe_width_90_mm", "toe_width_95_mm"}
+    assert float(row["toe_taper"]) == pytest.approx(
+        row["extra"]["toe_width_90_mm"] / float(row["ball_width_mm"]), abs=1e-4
+    )
+    for key, label in expected.expected.classes.items():
+        assert row[key] == label, key
 
 
 def test_drain_processes_photos_end_to_end(stack: Stack) -> None:
@@ -181,16 +226,20 @@ def _unknown_required_columns(conn: Conn, table: str, known: set[str]) -> list[s
 
 
 def test_finish_writes_measurement_and_classification_rows(stack: Stack) -> None:
-    # The local stack may have migrations from other branches applied (e.g. #52 adds
-    # required columns). The insert can't succeed until the worker writes those too.
-    ahead = _unknown_required_columns(
+    # Every required column must be one the worker writes. A migration that adds another
+    # one (as #52 did) fails here instead of failing every insert in production.
+    assert not _unknown_required_columns(
         stack.conn,
         "measurements",
-        {"submission_id", "pipeline_version"}
+        {"submission_id", "pipeline_version", "side", "outline_mm"}
         | {"length_mm", "ball_width_mm", "heel_width_mm", "arch_width_mm"},
     )
-    if ahead:
-        pytest.skip(f"local schema is ahead of this branch: measurements{ahead} required")
+    assert not _unknown_required_columns(
+        stack.conn,
+        "classifications",
+        {"measurement_id", "classifier_version", "width_class", "arch_class"}
+        | {"toe_box_shape", "toe_shape"},
+    )
     sid = stack.submit(photo_jpeg())
     message = stack.store.read_next()
     assert message is not None
@@ -198,8 +247,18 @@ def test_finish_writes_measurement_and_classification_rows(stack: Stack) -> None
         status="done",
         rejection_reason=None,
         processed_image_path=f"{stack.user_id}/processed/{sid}.jpg",
-        measurement=MeasurementRow("it-1", 271.5, 101.2, 66.0, 80.4, 0.42, {"k": 1}),
-        classification=ClassificationRow("it-1", "regular", "medium", "round"),
+        measurement=MeasurementRow(
+            pipeline_version="it-1",
+            side="left",
+            length_mm=271.5,
+            ball_width_mm=101.2,
+            heel_width_mm=66.0,
+            arch_width_mm=80.4,
+            outline_mm=((0.0, 0.0), *((float(i), float(i)) for i in range(1, 256))),
+            toe_taper=0.42,
+            extra={"k": 1},
+        ),
+        classification=ClassificationRow("it-1", "regular", "medium", "round", "roman"),
     )
 
     assert stack.store.finish(message.msg_id, sid, finish) is FinishOutcome.WRITTEN

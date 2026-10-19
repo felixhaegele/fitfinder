@@ -75,7 +75,7 @@ def test_success_stores_clean_copy_marks_done_and_archives(
     assert row.processed_image_path == path
     assert storage.files[path] == CLEAN_JPEG
     assert row.rejection_reason is None
-    assert row.measurement is None  # nothing wired in until #23/#24
+    assert row.measurement is None  # this fake result has no measurement
     assert store.archived == [7]
 
 

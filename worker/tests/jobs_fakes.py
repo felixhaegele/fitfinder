@@ -114,8 +114,16 @@ class FakeStorage:
 
 CLEAN_JPEG = b"\xff\xd8\xff clean copy"
 
-MEASUREMENT = MeasurementRow("test-1", 270.0, 100.0, 65.0, 80.0)
-CLASSIFICATION = ClassificationRow("test-1", "regular", "medium", "round")
+MEASUREMENT = MeasurementRow(
+    pipeline_version="test-1",
+    side="right",
+    length_mm=270.0,
+    ball_width_mm=100.0,
+    heel_width_mm=65.0,
+    arch_width_mm=80.0,
+    outline_mm=((0.0, 0.0),) * 256,
+)
+CLASSIFICATION = ClassificationRow("test-1", "regular", "medium", "round", "roman")
 
 
 def done(measured: bool = False) -> Processed:

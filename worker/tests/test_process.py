@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import pytest
 
-from app.jobs.process import Analysis, Result, process
+from app.jobs.process import Analysis, Result, no_analysis, process
 from app.jobs.sandbox import (
     JobCrashedError,
     JobTimeoutError,
@@ -44,7 +44,7 @@ def jpeg(image: np.ndarray) -> bytes:
 def test_process_measurable_photo_without_analyzer_returns_empty_result(
     measurable: RenderedFixture,
 ) -> None:
-    result = process(measurable.photo.image)
+    result = process(measurable.photo.image, no_analysis)
 
     assert isinstance(result, Result)
     assert result.measurement is None
