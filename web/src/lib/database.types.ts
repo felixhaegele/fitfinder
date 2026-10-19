@@ -25,14 +25,14 @@ export type Database = {
           Tables: {
             "classifications": {
                   Row: {
-                    "arch_class": string,"classifier_version": string,"created_at": string,"id": string,"measurement_id": string,"toe_box_shape": string,"width_class": string
+                    "arch_class": string,"classifier_version": string,"created_at": string,"id": string,"measurement_id": string,"toe_box_shape": string,"toe_shape": string,"width_class": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "arch_class": string,"classifier_version": string,"created_at"?: string,"id"?: string,"measurement_id": string,"toe_box_shape": string,"width_class": string
+                    "arch_class": string,"classifier_version": string,"created_at"?: string,"id"?: string,"measurement_id": string,"toe_box_shape": string,"toe_shape": string,"width_class": string
                   }
                   Update: {
-                    "arch_class"?: string,"classifier_version"?: string,"created_at"?: string,"id"?: string,"measurement_id"?: string,"toe_box_shape"?: string,"width_class"?: string
+                    "arch_class"?: string,"classifier_version"?: string,"created_at"?: string,"id"?: string,"measurement_id"?: string,"toe_box_shape"?: string,"toe_shape"?: string,"width_class"?: string
                   }
                   Relationships: [
                     {
@@ -45,14 +45,14 @@ isOneToOne: false
                   ]
                 },"measurements": {
                   Row: {
-                    "arch_width_mm": number,"ball_width_mm": number,"created_at": string,"extra": NonNullable<Json>,"heel_width_mm": number,"id": string,"length_mm": number,"pipeline_version": string,"submission_id": string,"toe_taper": number | null
+                    "arch_width_mm": number,"ball_width_mm": number,"created_at": string,"extra": NonNullable<Json>,"heel_width_mm": number,"id": string,"length_mm": number,"outline_mm": NonNullable<Json>,"pipeline_version": string,"side": string,"submission_id": string,"toe_taper": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "arch_width_mm": number,"ball_width_mm": number,"created_at"?: string,"extra"?: NonNullable<Json>,"heel_width_mm": number,"id"?: string,"length_mm": number,"pipeline_version": string,"submission_id": string,"toe_taper"?: number | null
+                    "arch_width_mm": number,"ball_width_mm": number,"created_at"?: string,"extra"?: NonNullable<Json>,"heel_width_mm": number,"id"?: string,"length_mm": number,"outline_mm": NonNullable<Json>,"pipeline_version": string,"side": string,"submission_id": string,"toe_taper"?: number | null
                   }
                   Update: {
-                    "arch_width_mm"?: number,"ball_width_mm"?: number,"created_at"?: string,"extra"?: NonNullable<Json>,"heel_width_mm"?: number,"id"?: string,"length_mm"?: number,"pipeline_version"?: string,"submission_id"?: string,"toe_taper"?: number | null
+                    "arch_width_mm"?: number,"ball_width_mm"?: number,"created_at"?: string,"extra"?: NonNullable<Json>,"heel_width_mm"?: number,"id"?: string,"length_mm"?: number,"outline_mm"?: NonNullable<Json>,"pipeline_version"?: string,"side"?: string,"submission_id"?: string,"toe_taper"?: number | null
                   }
                   Relationships: [
                     {

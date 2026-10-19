@@ -1,0 +1,62 @@
+{
+  "description": "Left insole laid off-centre and turned 5 degrees off the guide axis; page upside down in the photo.",
+  "expected": {
+    "length_mm": 258.0,
+    "heel_width_mm": 62.0,
+    "arch_width_mm": 53.0,
+    "ball_width_mm": 95.0,
+    "toe_width_85_mm": 70.5,
+    "toe_width_90_mm": 54.7,
+    "toe_width_95_mm": 34.4,
+    "toe_box_shape": "pointed",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "greek"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 258,
+      "heel_width_mm": 62,
+      "arch_width_mm": 53,
+      "ball_width_mm": 95,
+      "toe_box": "pointed",
+      "side": "left",
+      "tone": 55
+    },
+    "placement": {
+      "along_mm": -5,
+      "across_mm": -3,
+      "rotation_deg": 5
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          2700,
+          3697
+        ],
+        [
+          300,
+          3697
+        ],
+        [
+          300,
+          303
+        ],
+        [
+          2700,
+          303
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 3,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 7
+    }
+  }
+}

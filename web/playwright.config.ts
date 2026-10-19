@@ -22,5 +22,8 @@ export default defineConfig({
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // E2E runs never report to Sentry or upload source maps, even if .env.local has them.
+    // (An empty value wins over .env.local: Next.js only fills in unset variables.)
+    env: { NEXT_PUBLIC_SENTRY_DSN: "", SENTRY_AUTH_TOKEN: "" },
   },
 });

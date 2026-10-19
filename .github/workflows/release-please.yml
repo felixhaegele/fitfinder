@@ -1,0 +1,60 @@
+# Release automation (see docs/adr/0007-release-please.md).
+#
+# On every push to main, release-please reads the Conventional Commits since the last
+# release and keeps one "release PR" open that bumps version.txt and CHANGELOG.md.
+# Merging that PR makes release-please tag vX.Y.Z and publish a GitHub Release.
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+# Two quick merges shouldn't race each other while updating the same release PR.
+# Queue them instead of cancelling, so no release run is lost.
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+# Least privilege: nothing by default; the one job below asks for what it needs.
+permissions: {}
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # commit to the release branch, create tags and GitHub Releases
+      pull-requests: write # open and update the release PR, and label it (label APIs accept this)
+    steps:
+      # A PR opened with the default GITHUB_TOKEN doesn't trigger other workflows, so CI
+      # (and the required ci-ok check) would never run on the release PR. A GitHub App
+      # token avoids that. Without the App configured we fall back to GITHUB_TOKEN; then
+      # close and reopen the release PR right before merging to start CI.
+      - name: Check for release GitHub App
+        id: app-check
+        env:
+          CLIENT_ID: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          PRIVATE_KEY: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+        run: |
+          if [ -n "$CLIENT_ID" ] && [ -n "$PRIVATE_KEY" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::RELEASE_APP_CLIENT_ID / RELEASE_APP_PRIVATE_KEY not set; using GITHUB_TOKEN. CI won't start on the release PR by itself: close and reopen it right before merging."
+          fi
+
+      - name: Create GitHub App token
+        id: app-token
+        if: steps.app-check.outputs.enabled == 'true'
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          # Narrow the token to what release-please needs, even if the App has more.
+          permission-contents: write
+          permission-pull-requests: write
+
+      - uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ steps.app-token.outputs.token || github.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

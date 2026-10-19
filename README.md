@@ -2,7 +2,7 @@
 
 FitFinder helps cyclists find shoes that fit. You place a shoe's insole on a printed A4 template, take a photo and enter the shoe model, size and year. FitFinder then measures the insole (length, ball width, heel width, arch width, toe-box shape) and classifies it by foot shape. Over time this builds a searchable database: *which shoes fit a wide forefoot and narrow heel?*
 
-> Status: early bootstrap. See the [project board](https://github.com/users/felixhaegele/projects) and [milestone issues](https://github.com/felixhaegele/fitfinder/issues?q=label%3Aepic).
+> Status: v1 in progress. Login, upload and status pages are live at https://fitfinder-tau.vercel.app (account deletion is merged but needs `SUPABASE_SECRET_KEY` in Vercel); the measurement worker is being built. See the [project board](https://github.com/users/felixhaegele/projects) and [milestone issues](https://github.com/felixhaegele/fitfinder/issues?q=label%3Aepic).
 
 ## How it works
 
@@ -21,7 +21,15 @@ web (Next.js, Vercel) ──► Supabase (Auth, Storage, Postgres, pgmq queue)
 4. The worker finds the markers, corrects perspective so the image is top-down at a fixed pixels-per-mm, segments the insole, measures it and classifies it.
 5. Results are written back to Postgres, where the web app shows them and makes them searchable.
 
-Architecture decisions are recorded in [`docs/adr/`](docs/adr/).
+## Documentation
+
+| Document | What's in it |
+|---|---|
+| [`docs/adr/`](docs/adr/) | Architecture Decision Records: the big decisions and why |
+| [`docs/decisions.md`](docs/decisions.md) | Log of smaller decisions |
+| [`docs/environments.md`](docs/environments.md) | Local / preview / production, accounts, where secrets live, runbooks, gotchas |
+| [`docs/security.md`](docs/security.md) | Access model (RLS), upload threat model, secrets, GDPR |
+| `web/`, `worker/`, `supabase/`, `print/` READMEs | How to run and test each package |
 
 ## Repository layout
 
@@ -47,16 +55,31 @@ cp .env.example .env.local   # then fill in values
 
 - **Web:** `cd web && pnpm install && pnpm dev` → http://localhost:3000 ([details](web/README.md))
 - **Worker:** `cd worker && uv sync && uv run fastapi dev app/main.py` → http://127.0.0.1:8000/health ([details](worker/README.md))
-- **Database:** `supabase start`, then `supabase db reset` *(added in Milestone 3)*
+- **Database:** `supabase start` (Docker), then `supabase db reset` to re-apply migrations + seed ([details](supabase/README.md))
 
 ## CI
 
-Every PR runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Path filters run only the jobs for packages that changed: `web` (lint, typecheck, unit + e2e tests), `worker` (ruff, mypy, pytest) and `worker-image` (Docker build + `/health` smoke test). SonarQube Cloud then analyses code quality and coverage. Branch protection requires the single `ci-ok` job, which summarises the others.
+Every PR runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Path filters run only the jobs for packages that changed:
+
+| Job | What |
+|---|---|
+| `web` | lint, typecheck, unit tests with coverage, production build |
+| `e2e` | Playwright against a local Supabase stack (Auth, Storage, Mailpit): login, upload, status, deletion |
+| `supabase` | apply all migrations to a fresh Postgres, lint, pgTAP tests, check generated TS types are current |
+| `worker` / `worker-image` | ruff, mypy, pytest / Docker build + `/health` smoke test |
+| `print` | the A4 template generator: ruff, mypy, pytest, then renders the template PDF |
+| `sonar` | SonarQube Cloud analysis with coverage (skips itself without `SONAR_TOKEN`) |
+
+Pushes to `main` always run web and worker, so Sonar's baseline has coverage for everything. Branch protection requires the single `ci-ok` job, which summarises the others. Deploys are separate: Vercel builds every PR (preview) and `main` (production) itself; see [`docs/environments.md`](docs/environments.md).
+
+## Releases
+
+[release-please](https://github.com/googleapis/release-please) ([`.github/workflows/release-please.yml`](.github/workflows/release-please.yml)) keeps a release PR open that collects merged changes into [`CHANGELOG.md`](CHANGELOG.md) and bumps the repo-wide version in `version.txt`. Merging that PR tags `vX.Y.Z` and publishes a GitHub Release. The version is derived from the Conventional Commit titles of merged PRs. See [ADR 0007](docs/adr/0007-release-please.md).
 
 ## Contributing
 
 - **GitHub Flow:** `main` is always deployable. Every change is a branch plus a pull request linked to an issue, e.g. `feat/12-upload-form` with `Closes #12`.
-- **Conventional Commits:** `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`, `refactor:`. These later drive automated changelogs and releases.
+- **Conventional Commits:** `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`, `refactor:`. PR titles drive the changelog and version (see [Releases](#releases)).
 - Before opening a PR, lint, typecheck and tests must pass for every package you touched.
 - Non-trivial architecture choices get an ADR. See [ADR 0001](docs/adr/0001-record-architecture-decisions.md).
 

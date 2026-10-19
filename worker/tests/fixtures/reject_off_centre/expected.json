@@ -1,0 +1,50 @@
+{
+  "description": "Insole laid 40 mm off the guide axis, so its forefoot crosses the dashed line.",
+  "expected": {
+    "rejection": "insole_touches_edge"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 265,
+      "heel_width_mm": 64,
+      "arch_width_mm": 56,
+      "ball_width_mm": 98,
+      "toe_box": "round",
+      "side": "left",
+      "tone": 50
+    },
+    "placement": {
+      "across_mm": 40
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          300,
+          303
+        ],
+        [
+          2700,
+          303
+        ],
+        [
+          2700,
+          3697
+        ],
+        [
+          300,
+          3697
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 3,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 13
+    }
+  }
+}

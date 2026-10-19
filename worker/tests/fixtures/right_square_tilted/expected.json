@@ -1,0 +1,61 @@
+{
+  "description": "Right insole, square toe box, grainy fabric, photo taken at an angle.",
+  "expected": {
+    "length_mm": 270.0,
+    "heel_width_mm": 66.0,
+    "arch_width_mm": 58.0,
+    "ball_width_mm": 102.0,
+    "toe_width_85_mm": 100.0,
+    "toe_width_90_mm": 95.3,
+    "toe_width_95_mm": 83.6,
+    "toe_box_shape": "square",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "roman"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 270,
+      "heel_width_mm": 66,
+      "arch_width_mm": 58,
+      "ball_width_mm": 102,
+      "toe_box": "square",
+      "side": "right",
+      "tone": 70,
+      "texture": 6
+    },
+    "placement": {
+      "along_mm": -9
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          520,
+          480
+        ],
+        [
+          2520,
+          430
+        ],
+        [
+          2860,
+          3720
+        ],
+        [
+          140,
+          3640
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 3,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 2
+    }
+  }
+}
