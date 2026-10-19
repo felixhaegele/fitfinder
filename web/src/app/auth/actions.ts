@@ -20,20 +20,21 @@ export async function sendMagicLink(_prev: LoginState, formData: FormData): Prom
     return { status: "error", message: "Please enter a valid email address." };
   }
 
-  // The link must come back to the same site (and, with PKCE, the same browser).
-  // Supabase only accepts redirect URLs on its allow-list (config.toml / dashboard).
+  // The link must come back to the same site; the email template appends the one-time
+  // token to this URL. Supabase only accepts redirect URLs on its allow-list
+  // (config.toml / dashboard). next is always set, so the URL always has a "?".
   const origin = (await headers()).get("origin");
   if (!origin) {
     return { status: "error", message: "Something went wrong. Please reload and try again." };
   }
   const next = safeNextPath(formData.get("next"));
-  const callback = new URL("/auth/callback", origin);
-  callback.searchParams.set("next", next);
+  const confirm = new URL("/auth/confirm", origin);
+  confirm.searchParams.set("next", next);
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: callback.toString(), shouldCreateUser: true },
+    options: { emailRedirectTo: confirm.toString(), shouldCreateUser: true },
   });
 
   if (error) {

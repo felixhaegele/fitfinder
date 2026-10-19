@@ -18,7 +18,8 @@ export async function magicLinkFor(request: APIRequestContext, to: string): Prom
         const { messages } = (await res.json()) as MailpitList;
         if (messages.length === 0) return false;
         const msg = await (await request.get(`${MAILPIT}/api/v1/message/${messages[0].ID}`)).json();
-        link = /href="([^"]+\/auth\/v1\/verify[^"]+)"/.exec(msg.HTML as string)?.[1];
+        // Our template links straight to the app's /auth/confirm with a token hash (#46)
+        link = /href="([^"]+\/auth\/confirm\?[^"]+)"/.exec(msg.HTML as string)?.[1];
         return Boolean(link);
       },
       { timeout: 15_000, message: `no login email for ${to}` },

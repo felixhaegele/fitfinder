@@ -1,0 +1,13 @@
+<!--
+  FitFinder login email. Used for both "Magic Link" (existing users) and
+  "Confirm signup" (new users); the hosted projects need the same text in
+  Authentication → Emails → Templates (see docs/environments.md).
+
+  The link goes to /auth/confirm on the site that requested it ({{ .RedirectTo }}
+  always carries ?next=…), with a one-time token hash. Unlike the default PKCE
+  link, it works in any browser: request on a laptop, open on a phone.
+-->
+<h2>Log in to FitFinder</h2>
+<p>Click the link below to log in. It works once and expires in one hour.</p>
+<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email">Log in to FitFinder</a></p>
+<p>If you didn't request this, you can ignore this email.</p>

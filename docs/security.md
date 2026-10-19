@@ -41,7 +41,7 @@ The full worker checklist is on #29.
 
 ## Authentication
 
-- Supabase Auth, magic links only (no passwords). PKCE flow: the link only works in the browser that requested it. Cross-device links: #46.
+- Supabase Auth, magic links only (no passwords). The link carries a one-time token hash that `/auth/confirm` verifies (`verifyOtp`), so it works on any device (#46); it's valid once, for one hour. Like any magic link, whoever has the email can log in. Known downside: email security scanners that open links automatically can use up the token, and the user then requests a new link.
 - `web/src/proxy.ts` refreshes the session on every request; access checks happen in `getUser()` / `requireUser()` (`web/src/lib/auth.ts`), which verify the token with `getClaims()` and always run at request time.
 - `safeNextPath()` (`web/src/lib/redirect.ts`) only allows same-site paths after login, so `?next=` can't be used as an open redirect.
 - Hosted Supabase only redirects magic links to allow-listed URLs (see `docs/environments.md`).

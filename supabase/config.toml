@@ -247,6 +247,16 @@ otp_expiry = 3600
 # admin_email = "admin@email.com"
 # sender_name = "Admin"
 
+# FitFinder: magic links verify a token hash on /auth/confirm, so they work in any
+# browser (#46). Hosted projects need the same templates in the dashboard.
+[auth.email.template.magic_link]
+subject = "Your FitFinder login link"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Your FitFinder login link"
+content_path = "./supabase/templates/confirmation.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"

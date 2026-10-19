@@ -14,8 +14,8 @@ export function LoginForm({ next, linkError }: { next: string; linkError: boolea
       <div role="status" className="rounded-lg border border-zinc-200 p-4 dark:border-zinc-800">
         <p className="font-medium">Check your inbox</p>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          We sent a login link to <strong>{state.email}</strong>. Open it in this browser on this
-          device.
+          We sent a login link to <strong>{state.email}</strong>. You can open it on any device,
+          e.g. on your phone.
         </p>
       </div>
     );

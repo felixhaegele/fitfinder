@@ -4,6 +4,8 @@ Smaller decisions that shaped the code but don't need a full ADR. Bigger ones ar
 
 | Date | Decision | Why | Where |
 |---|---|---|---|
+| 2026-10-19 | Magic links verify a token hash on `/auth/confirm` (works on any device); `/auth/confirm` also accepts PKCE codes | People request the link on a laptop and open it on their phone. Accepting both keeps login working while hosted templates are updated | `supabase/templates/`, #46 |
+| 2026-10-19 | CI logs in to hosted databases through the access token (temporary login role), not a database password | A wrong password secret broke prod deploys while local tests passed; one secret less | `.github/workflows/db-deploy.yml`, #89 |
 | 2026-10-18 | One Vercel project (`fitfinder-prod`): previews use staging Supabase, production uses prod | One build per push, private previews; a second project doubled builds and exposed a public staging site | #32, `docs/environments.md` |
 | 2026-10-18 | Vercel Hobby plan, `*.vercel.app` domain for now | Non-commercial project; own domain comes with the email provider (#69) | #32 |
 | 2026-10-18 | Vercel functions in `dub1` (Dublin) | Next to both Supabase projects (`eu-west-1`), EU for GDPR | `web/vercel.json` |
