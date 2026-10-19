@@ -45,7 +45,7 @@ export function formatMm(value: number | null | undefined): string {
 type Classification = Database["public"]["Tables"]["classifications"]["Row"];
 
 export const CLASS_LABELS: Record<
-  "width_class" | "arch_class" | "toe_box_shape",
+  "width_class" | "arch_class" | "toe_box_shape" | "toe_shape",
   { label: string; values: Record<string, string> }
 > = {
   width_class: { label: "Width", values: { narrow: "Narrow", regular: "Regular", wide: "Wide" } },
@@ -54,7 +54,22 @@ export const CLASS_LABELS: Record<
     label: "Toe box",
     values: { round: "Round", square: "Square", pointed: "Pointed" },
   },
+  toe_shape: {
+    label: "Toe shape",
+    values: {
+      egyptian: "Egyptian (big toe longest)",
+      roman: "Roman (first toes even)",
+      greek: "Greek (second toe longest)",
+    },
+  },
 };
+
+/**
+ * Toe box and toe shape come from the insole, so they describe the shoe's toe box and
+ * the foot type it suits, not the user's own foot (owner note on #24).
+ */
+export const TOE_LABELS_NOTE =
+  "Toe box and toe shape describe this shoe's toe box and the foot type it suits, not your own foot.";
 
 export function classificationRows(c: Pick<Classification, keyof typeof CLASS_LABELS>) {
   return (Object.keys(CLASS_LABELS) as (keyof typeof CLASS_LABELS)[]).map((key) => ({

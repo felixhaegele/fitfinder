@@ -6,7 +6,13 @@ import { Suspense } from "react";
 import { StatusBadge } from "@/components/status-badge";
 import { requireUser } from "@/lib/auth";
 import { INSOLE_CONDITIONS, type InsoleCondition, SIZE_SYSTEMS, type SizeSystem } from "@/lib/submission-form";
-import { classificationRows, formatMm, isInProgress, statusCopy } from "@/lib/submission-status";
+import {
+  classificationRows,
+  formatMm,
+  isInProgress,
+  statusCopy,
+  TOE_LABELS_NOTE,
+} from "@/lib/submission-status";
 import { getMySubmission } from "@/lib/submissions";
 
 import { AutoRefresh } from "./auto-refresh";
@@ -97,6 +103,7 @@ async function SubmissionDetails({ params }: { params: PageProps<"/submissions/[
                   </div>
                 ))}
               </dl>
+              <p className="mt-2 text-xs text-zinc-500">{TOE_LABELS_NOTE}</p>
             </div>
           )}
         </section>
