@@ -53,10 +53,14 @@ cp .env.example .env.local   # then fill in values
 
 Every PR runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml). Path filters run only the jobs for packages that changed: `web` (lint, typecheck, unit + e2e tests), `worker` (ruff, mypy, pytest) and `worker-image` (Docker build + `/health` smoke test). SonarQube Cloud then analyses code quality and coverage. Branch protection requires the single `ci-ok` job, which summarises the others.
 
+## Releases
+
+[release-please](https://github.com/googleapis/release-please) ([`.github/workflows/release-please.yml`](.github/workflows/release-please.yml)) keeps a release PR open that collects merged changes into [`CHANGELOG.md`](CHANGELOG.md) and bumps the repo-wide version in `version.txt`. Merging that PR tags `vX.Y.Z` and publishes a GitHub Release. The version is derived from the Conventional Commit titles of merged PRs. See [ADR 0007](docs/adr/0007-release-please.md).
+
 ## Contributing
 
 - **GitHub Flow:** `main` is always deployable. Every change is a branch plus a pull request linked to an issue, e.g. `feat/12-upload-form` with `Closes #12`.
-- **Conventional Commits:** `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`, `refactor:`. These later drive automated changelogs and releases.
+- **Conventional Commits:** `feat:`, `fix:`, `chore:`, `docs:`, `test:`, `ci:`, `refactor:`. PR titles drive the changelog and version (see [Releases](#releases)).
 - Before opening a PR, lint, typecheck and tests must pass for every package you touched.
 - Non-trivial architecture choices get an ADR. See [ADR 0001](docs/adr/0001-record-architecture-decisions.md).
 
