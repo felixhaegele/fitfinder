@@ -34,16 +34,17 @@ insert into public.submissions (id, user_id, shoe_model_id, size, size_system, i
      '10000000-0000-0000-0000-000000000001', 42, 'eu',
      '00000000-0000-0000-0000-00000000000b/two.jpg', now(), 'done', 'new');
 insert into public.measurements
-  (id, submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm)
+  (id, submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm,
+   side, outline_mm)
   values
     ('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
-     '1.0.0', 272.5, 98.2, 62.1, 74.0),
+     '1.0.0', 272.5, 98.2, 62.1, 74.0, 'left', (select jsonb_agg(jsonb_build_array(0, i)) from generate_series(0, 255) i)),
     ('30000000-0000-0000-0000-000000000002', '20000000-0000-0000-0000-000000000002',
-     '1.0.0', 268.0, 97.0, 61.0, 73.0);
-insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape)
+     '1.0.0', 268.0, 97.0, 61.0, 73.0, 'right', (select jsonb_agg(jsonb_build_array(0, i)) from generate_series(0, 255) i));
+insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape, toe_shape)
   values
-    ('30000000-0000-0000-0000-000000000001', '1.0.0', 'regular', 'medium', 'round'),
-    ('30000000-0000-0000-0000-000000000002', '1.0.0', 'wide', 'low', 'square');
+    ('30000000-0000-0000-0000-000000000001', '1.0.0', 'regular', 'medium', 'round', 'egyptian'),
+    ('30000000-0000-0000-0000-000000000002', '1.0.0', 'wide', 'low', 'square', 'roman');
 
 -- What auth.admin.deleteUser() does in the database (hard delete)
 delete from auth.users where id = '00000000-0000-0000-0000-00000000000a';
