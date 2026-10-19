@@ -37,6 +37,9 @@ and toe tip.
   the definitions ask for fall exactly on the parameters. The lateral side runs straight
   to the arch, and only the medial side cuts in, like a real arch.
 - **Toe:** a superellipse cap, (1 - t^n)^(1/n). The exponent n sets the toe-box shape.
+  The two sides' caps meet at the toe tip on the axis, so `ball_medial_share` (how much
+  of the ball width lies on the medial side) sets where across the forefoot the tip is,
+  and with it the toe-end slant (`toe_shape`, #24).
 
 All shapes are waisted (arch < heel < ball), which is what makes "smallest width in the
 midfoot" well defined. A shape that breaks that is refused.
@@ -56,7 +59,10 @@ TOE_BOX_EXPONENT: dict[ToeBox, float] = {"pointed": 1.4, "round": 2.0, "square":
 
 # Control-point positions as fractions of the length.
 HEEL_AT, ARCH_AT, BALL_AT = 0.16, 0.42, 0.72
-# Share of the ball width on the medial side (the big-toe joint bulges a little).
+# Default share of the ball width on the medial side of the axis (the big-toe joint bulges
+# a little). Because the axis ends at the toe tip, this is also where the toe tip sits
+# across the forefoot, 0 = medial edge: about half-way is a Greek toe end (longest near
+# the 2nd toe), near the medial edge an Egyptian one (longest at the big toe).
 BALL_MEDIAL_SHARE = 0.52
 
 # Measurement regions (fractions of length), see the module docstring.
@@ -81,6 +87,7 @@ class InsoleShape:
     ball_width_mm: float
     toe_box: ToeBox
     side: Side = "left"
+    ball_medial_share: float = BALL_MEDIAL_SHARE
 
     def __post_init__(self) -> None:
         if not self.arch_width_mm < self.heel_width_mm < self.ball_width_mm:
@@ -98,7 +105,7 @@ class InsoleShape:
 
     @property
     def _ball_half(self) -> tuple[float, float]:
-        medial = self.ball_width_mm * BALL_MEDIAL_SHARE
+        medial = self.ball_width_mm * self.ball_medial_share
         return medial, self.ball_width_mm - medial
 
     def _side_points(self, k: int) -> FloatArray:

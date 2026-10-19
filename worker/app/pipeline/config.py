@@ -70,3 +70,42 @@ FOREFOOT_AREA_RATIO = 1.05
 # Upper bound on the rounds of "take the extremes along the axis, re-aim the axis through
 # them". It settles in 2-6 rounds; the bound only guards against a pathological outline.
 AXIS_MAX_ITERATIONS = 20
+
+# --- Classification (#24) ---
+#
+# Rule-based, on ratios, so the labels don't depend on the shoe size. Every
+# classifications row stores CLASSIFIER_VERSION, so old submissions can be re-classified.
+# **Bump it whenever any number below changes**, or the classify logic does:
+# patch = a threshold nudge, minor = a new rule, major = new labels.
+#
+# These v1 thresholds are first guesses, placed between the synthetic fixtures' shapes
+# (tests/fixtures). They must be calibrated on real insoles (v2: crowd data).
+CLASSIFIER_VERSION = "1.0.0"
+
+# width_class from ball width / length. Typical insoles are around 0.36-0.38.
+WIDTH_NARROW_BELOW = 0.355
+WIDTH_WIDE_ABOVE = 0.390
+
+# arch_class from arch (midfoot) width / ball width. A high arch leaves a narrow midfoot
+# on the insole, a low (flat) arch a wide one. Typical insoles are around 0.55-0.58.
+ARCH_HIGH_BELOW = 0.52
+ARCH_LOW_ABOVE = 0.60
+
+# toe_box_shape from the toe width at 90 % of the length / ball width: how much of the
+# ball width the toe box keeps near its end. Synthetic pointed / round / square toes give
+# 0.58 / 0.77 / 0.93.
+TOE_BOX_POINTED_BELOW = 0.67
+TOE_BOX_SQUARE_ABOVE = 0.85
+
+# toe_shape from the toe-end slant of the stored outline: how much further forward the
+# toe end reaches at the big toe than at the 2nd/3rd toe. Measured at these fractions of
+# the toe-box width (at 85 % of the length) from its medial edge, as a fraction of that
+# width. Positive = longest at the big toe.
+TOE_SLANT_AT = (0.15, 0.45)
+# Above this: egyptian (longest at the big toe).
+TOE_SLANT_EGYPTIAN_ABOVE = 0.03
+# Below this: greek (longest near the 2nd toe / centre). In between: roman (level across
+# the first toes). The band reaches further down than up because even a flat-fronted
+# (square) toe box rounds off at its medial corner, near the big-toe sample point:
+# synthetic square toes give about -0.08.
+TOE_SLANT_GREEK_BELOW = -0.10

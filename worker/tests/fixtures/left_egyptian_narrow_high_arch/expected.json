@@ -1,0 +1,62 @@
+{
+  "description": "Narrow left insole with a high arch and an Egyptian toe end (longest at the big toe), laid off-centre so its lateral forefoot stays inside the guides.",
+  "expected": {
+    "length_mm": 260.0,
+    "heel_width_mm": 58.0,
+    "arch_width_mm": 44.0,
+    "ball_width_mm": 88.0,
+    "toe_width_85_mm": 77.9,
+    "toe_width_90_mm": 67.4,
+    "toe_width_95_mm": 50.2,
+    "toe_box_shape": "round",
+    "width_class": "narrow",
+    "arch_class": "high",
+    "toe_shape": "egyptian"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 260,
+      "heel_width_mm": 58,
+      "arch_width_mm": 44,
+      "ball_width_mm": 88,
+      "toe_box": "round",
+      "side": "left",
+      "ball_medial_share": 0.12,
+      "tone": 45
+    },
+    "placement": {
+      "along_mm": -4,
+      "across_mm": 26
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          330,
+          340
+        ],
+        [
+          2690,
+          290
+        ],
+        [
+          2740,
+          3660
+        ],
+        [
+          280,
+          3700
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 0.9,
+      "blur_sigma": 0.5,
+      "noise_sigma": 3,
+      "light_gradient": 0.2,
+      "light_angle_deg": 30,
+      "seed": 21
+    }
+  }
+}
