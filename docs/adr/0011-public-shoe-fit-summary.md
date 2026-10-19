@@ -24,7 +24,7 @@ Rules for both:
 - A done submission that has a measurement but no classification yet still counts and adds to the medians. It just adds nothing to the most-common labels. If no submission of a shoe has a classification, those labels are null.
 - With a tie, "most common" (`mode()`) takes the first value in alphabetical order. With one or two uploads that is effectively arbitrary; the page shows the count so readers can judge.
 - The functions are `security definer` with `search_path = ''` and fully qualified names. Execute is revoked from `public` (Postgres grants it to everyone by default) and granted only to `anon` and `authenticated`.
-- The shared "newest result per done submission" query lives in a view in a new, unexposed `private` schema. PostgREST only serves the schemas listed in `supabase/config.toml` (`public`, `graphql_public`), and `anon` / `authenticated` get no grants on `private`.
+- The shared "newest result per done submission" query lives in a view in a new `private` schema. `anon` and `authenticated` get no rights on that schema or the view, so they can't query it even if the API served the schema. The API doesn't serve it anyway: locally, PostgREST only serves the schemas listed in `supabase/config.toml` (`public`, `graphql_public`); on hosted projects, the dashboard's API settings decide. The missing grants are what protect it everywhere. The view is also `security_invoker`, so RLS would still apply to anyone else who reached it.
 
 The web reads the functions with `supabase.rpc(...)` and applies the class filters with `.eq()`, which PostgREST encodes safely.
 
@@ -42,6 +42,7 @@ The web reads the functions with `supabase.rpc(...)` and applies the class filte
 ## Consequences
 
 - RLS on `submissions`, `measurements` and `classifications` is unchanged: anon still can't read a single row. Only the aggregate crosses that boundary, and only the columns listed above. `supabase/tests/database/95_shoe_fit_summary.test.sql` proves both, plus that rejected, failed and queued submissions and older result versions don't count.
+- Supabase's security advisor may warn that these security-definer functions are executable by `anon` / `authenticated`. For these two that is intended; the warning is a prompt to check that the function exposes only what it should.
 - Any new column in these functions is a privacy decision. It must stay shoe-level, and the pgTAP column-list test has to be updated deliberately.
 - Every page view aggregates over all done submissions. That's fine for v1; revisit it (materialized view, indexes) when it shows up in timings.
 - Crowd data is now public, so fake uploads can skew a shoe's numbers. With few uploads per shoe this is easy. Outlier handling stays a v2 topic (`docs/security.md`).
