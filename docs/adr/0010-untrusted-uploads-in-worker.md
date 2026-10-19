@@ -10,7 +10,7 @@ The worker (#29) downloads photos that users put into Storage. The browser re-en
 - the real file type from the magic bytes,
 - a pixel cap before decoding (decompression bombs),
 - a time limit per job,
-- a server-side re-encode without metadata, which is the only copy the UI shows.
+- a server-side re-encode without metadata. The UI shows it next to the original upload; both stay in the private bucket and are only ever served to their owner via short-lived signed URLs (owner decision 2026-10-19, amending requirement 4 on #29).
 
 Two forces shape how to build this:
 
