@@ -129,7 +129,16 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            [_ in never]: never
+            "shoe_fit_by_size":
+{ Args: { "shoe_model": string }; Returns: {
+              "arch_class": string,"median_arch_width_mm": number,"median_ball_width_mm": number,"median_heel_width_mm": number,"median_length_mm": number,"size": number,"size_system": string,"submission_count": number,"toe_box_shape": string,"toe_shape": string,"width_class": string
+            }[]
+                           },
+"shoe_fit_summaries":
+{ Args: { "search"?: string }; Returns: {
+              "arch_class": string,"brand": string,"median_arch_width_mm": number,"median_ball_width_mm": number,"median_heel_width_mm": number,"median_length_mm": number,"model": string,"shoe_model_id": string,"submission_count": number,"toe_box_shape": string,"toe_shape": string,"width_class": string,"year": number
+            }[]
+                           }
           }
           Enums: {
             [_ in never]: never
