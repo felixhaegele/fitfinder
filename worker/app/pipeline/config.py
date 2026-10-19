@@ -53,3 +53,20 @@ MAX_EDGE_BLUR_MM = 0.5
 # The insole "touches the edge" of the search region if at least this much of its
 # outline (mm) lies on that edge.
 EDGE_TOUCH_MIN_MM = 1.0
+
+# --- Measuring (#23) ---
+
+# Before measuring, the outline is resampled every OUTLINE_STEP_MM and smoothed along its
+# length with a Gaussian of OUTLINE_SMOOTHING_MM, to remove the pixel staircase (at
+# 10 px/mm a pixel is 0.1 mm). Larger smoothing would round off a pointed toe tip.
+OUTLINE_STEP_MM = 0.1
+OUTLINE_SMOOTHING_MM = 0.4
+
+# Telling heel from toe: the half of the insole (split at mid-length) with at least this
+# many times the other half's area is the forefoot. Insoles are well above it (the
+# synthetic ones are around 1.2-1.4). Closer than this, the template's insole_axis decides.
+FOREFOOT_AREA_RATIO = 1.05
+
+# Upper bound on the rounds of "take the extremes along the axis, re-aim the axis through
+# them". It settles in 2-6 rounds; the bound only guards against a pathological outline.
+AXIS_MAX_ITERATIONS = 20

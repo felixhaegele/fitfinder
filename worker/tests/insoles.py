@@ -2,18 +2,25 @@
 
 ## The insole frame and the measurement definitions
 
-These definitions are what `expected.json` means. The pipeline (#23) must report the
-same quantities.
+These definitions are what `expected.json` means. The pipeline (`app/pipeline/measure.py`)
+reports the same quantities.
 
-- **Frame:** x runs along the insole's long axis, from the heel point (x = 0) to the toe
-  tip (x = length). y runs across. Both the heel point and the toe tip lie on y = 0.
-- **Width at x:** the extent of the outline across the axis (perpendicular to it) at x.
+- **Frame ("option A", owner decision 2026-10-18, one frame everywhere: tests, pipeline,
+  database):** millimetres, y up, seen from above as if standing on the insole. The toe
+  points along +y: the heel point is the origin (0, 0) and the toe tip is (0, length).
+  x runs across the insole, so +x is the right-hand side when walking heel -> toe.
+- **Sides:** the medial (big-toe) side of a *right* insole is at -x, of a *left* insole at
+  +x. The pipeline mirrors left insoles onto right (x -> -x) and stores the original side,
+  so every stored outline has the medial side at -x. The outlines drawn here are the
+  physical ones, not yet mirrored.
+- **Point order:** heel point -> medial side -> toe tip -> lateral side.
+- **Width at y:** the extent of the outline across the axis, in x, at height y.
 - `length_mm`: the distance from the heel point to the toe tip, which is also the outline's
-  extent along the axis.
-- `heel_width_mm`: the largest width in the rear 25 % of the length.
-- `arch_width_mm` (midfoot): the smallest width between 30 % and 60 % of the length.
+  extent along the axis (in y).
+- `heel_width_mm`: the largest width for y in the rear 25 % of the length.
+- `arch_width_mm` (midfoot): the smallest width for y between 30 % and 60 % of the length.
 - `ball_width_mm`: the largest width in the front half.
-- `toe_width_mm`: the width at 85 %, 90 % and 95 % of the length. These describe the
+- `toe_width_mm`: the width at y = 85 %, 90 % and 95 % of the length. These describe the
   toe-box shape: a square toe box stays wide almost to the tip, a pointed one narrows early.
 - `toe_box_shape`: `pointed`, `round` or `square`, the label the generator drew. #24 will
   derive it from the toe widths; its thresholds belong in the pipeline config.
@@ -95,7 +102,8 @@ class InsoleShape:
         return medial, self.ball_width_mm - medial
 
     def _side_points(self, k: int) -> FloatArray:
-        """(x, half-width) along side k (0 = medial, 1 = lateral), heel point to toe tip."""
+        """(distance along the axis, half-width) along side k (0 = medial, 1 = lateral),
+        heel point to toe tip."""
         length = self.length_mm
         xh, xa, xb = HEEL_AT * length, ARCH_AT * length, BALL_AT * length
         yh, ya, yb = self._heel_half[k], self._arch_half[k], self._ball_half[k]
@@ -119,12 +127,16 @@ class InsoleShape:
         return np.concatenate([heel, mid[1:], toe])
 
     def outline(self) -> FloatArray:
-        """Closed outline (n, 2) in the insole frame, mm. Left insoles have the medial side
-        at +y, right insoles are their mirror image."""
+        """Closed outline (n, 2) in the insole frame, mm, ordered heel point -> medial ->
+        toe tip -> lateral. A left insole has its medial side at +x, a right one at -x
+        (its mirror image)."""
         medial = self._side_points(0)
         lateral = self._side_points(1)
-        sign = 1.0 if self.side == "left" else -1.0
-        pts = np.concatenate([medial * [1, sign], (lateral * [1, -sign])[::-1][1:-1]])
+        medial_sign = 1.0 if self.side == "left" else -1.0
+        # Columns of _side_points are (along, half-width); the frame wants (x, y).
+        medial_xy = np.column_stack([medial_sign * medial[:, 1], medial[:, 0]])
+        lateral_xy = np.column_stack([-medial_sign * lateral[:, 1], lateral[:, 0]])
+        pts = np.concatenate([medial_xy, lateral_xy[::-1][1:-1]])
         return np.asarray(pts, np.float64)
 
     def width_at(self, fraction: float) -> float:
@@ -139,32 +151,32 @@ class InsoleShape:
         return {f: self.width_at(f) for f in TOE_WIDTH_AT}
 
 
-def widths_along(outline: FloatArray, xs: FloatArray) -> FloatArray:
-    """Width of a closed outline (in its own frame) across the x axis at each of `xs`.
+def widths_along(outline: FloatArray, ys: FloatArray) -> FloatArray:
+    """Width of a closed outline (in its own frame) across the y axis at each of `ys`.
 
-    Intersects each vertical line x = c with every polygon edge. Test-side ground truth;
-    the pipeline does its own measuring (#23).
+    Intersects each horizontal line y = c with every polygon edge and takes the extent of
+    the hits in x. Test-side ground truth; the pipeline does its own measuring.
     """
     a = outline
     b = np.roll(outline, -1, axis=0)
-    out = np.empty(len(xs))
-    for i, c in enumerate(xs):
-        lo, hi = np.minimum(a[:, 0], b[:, 0]), np.maximum(a[:, 0], b[:, 0])
+    out = np.empty(len(ys))
+    for i, c in enumerate(ys):
+        lo, hi = np.minimum(a[:, 1], b[:, 1]), np.maximum(a[:, 1], b[:, 1])
         hit = (lo <= c) & (c <= hi) & (hi > lo)
-        t = (c - a[hit, 0]) / (b[hit, 0] - a[hit, 0])
-        ys = a[hit, 1] + t * (b[hit, 1] - a[hit, 1])
-        out[i] = ys.max() - ys.min() if len(ys) else 0.0
+        t = (c - a[hit, 1]) / (b[hit, 1] - a[hit, 1])
+        xs = a[hit, 0] + t * (b[hit, 0] - a[hit, 0])
+        out[i] = xs.max() - xs.min() if len(xs) else 0.0
     return out
 
 
 def measure_in_frame(outline: FloatArray) -> dict[str, float]:
     """Apply the module's measurement definitions to an outline given in the insole frame."""
-    length = float(outline[:, 0].max() - outline[:, 0].min())
-    x0 = float(outline[:, 0].min())
+    length = float(outline[:, 1].max() - outline[:, 1].min())
+    y0 = float(outline[:, 1].min())
 
     def region(lo: float, hi: float) -> FloatArray:
-        xs = x0 + length * np.linspace(lo, hi, 601)
-        return widths_along(outline, xs[1:-1] if lo == 0.0 or hi == 1.0 else xs)
+        ys = y0 + length * np.linspace(lo, hi, 601)
+        return widths_along(outline, ys[1:-1] if lo == 0.0 or hi == 1.0 else ys)
 
     result = {
         "length_mm": length,
@@ -174,6 +186,6 @@ def measure_in_frame(outline: FloatArray) -> dict[str, float]:
     }
     for f in TOE_WIDTH_AT:
         result[f"toe_width_{round(f * 100)}_mm"] = float(
-            widths_along(outline, np.array([x0 + f * length]))[0]
+            widths_along(outline, np.array([y0 + f * length]))[0]
         )
     return result
