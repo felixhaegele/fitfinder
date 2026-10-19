@@ -1,0 +1,57 @@
+{
+  "description": "Left insole, pointed toe, landscape photo with the page turned 90 degrees.",
+  "expected": {
+    "length_mm": 250.0,
+    "heel_width_mm": 60.0,
+    "arch_width_mm": 52.0,
+    "ball_width_mm": 92.0,
+    "toe_width_85_mm": 68.3,
+    "toe_width_90_mm": 52.9,
+    "toe_width_95_mm": 33.3,
+    "toe_box_shape": "pointed",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "greek"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 250,
+      "heel_width_mm": 60,
+      "arch_width_mm": 52,
+      "ball_width_mm": 92,
+      "toe_box": "pointed",
+      "side": "left",
+      "tone": 40
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          3697,
+          300
+        ],
+        [
+          3697,
+          2700
+        ],
+        [
+          303,
+          2700
+        ],
+        [
+          303,
+          300
+        ]
+      ],
+      "size": [
+        4000,
+        3000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 2,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 3
+    }
+  }
+}

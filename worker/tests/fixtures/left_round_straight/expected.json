@@ -1,0 +1,57 @@
+{
+  "description": "Left insole, about EU 42, round toe, dark, photo from straight above: the easy case.",
+  "expected": {
+    "length_mm": 265.0,
+    "heel_width_mm": 64.0,
+    "arch_width_mm": 56.0,
+    "ball_width_mm": 98.0,
+    "toe_width_85_mm": 86.8,
+    "toe_width_90_mm": 75.1,
+    "toe_width_95_mm": 55.9,
+    "toe_box_shape": "round",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "greek"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 265,
+      "heel_width_mm": 64,
+      "arch_width_mm": 56,
+      "ball_width_mm": 98,
+      "toe_box": "round",
+      "side": "left",
+      "tone": 50
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          300,
+          303
+        ],
+        [
+          2700,
+          303
+        ],
+        [
+          2700,
+          3697
+        ],
+        [
+          300,
+          3697
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 1.0,
+      "blur_sigma": 0.0,
+      "noise_sigma": 0.0,
+      "light_gradient": 0.0,
+      "light_angle_deg": 0.0,
+      "seed": 1
+    }
+  }
+}

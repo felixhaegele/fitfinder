@@ -14,16 +14,19 @@ insert into public.submissions (id, user_id, shoe_model_id, size, size_system, i
           '10000000-0000-0000-0000-000000000001', 43, 'eu',
           '00000000-0000-0000-0000-00000000000a/one.jpg', now(), 'done', 'new');
 insert into public.measurements
-  (id, submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, toe_taper)
+  (id, submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, toe_taper,
+   side, outline_mm)
   values ('30000000-0000-0000-0000-000000000001', '20000000-0000-0000-0000-000000000001',
-          '1.0.0', 272.5, 98.2, 62.1, 74.0, 0.4210);
-insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape)
-  values ('30000000-0000-0000-0000-000000000001', '1.0.0', 'regular', 'medium', 'round');
+          '1.0.0', 272.5, 98.2, 62.1, 74.0, 0.4210,
+          'left', (select jsonb_agg(jsonb_build_array(0, i)) from generate_series(0, 255) i));
+insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape, toe_shape)
+  values ('30000000-0000-0000-0000-000000000001', '1.0.0', 'regular', 'medium', 'round', 'roman');
 
 select throws_ok(
   $$insert into public.measurements
-    (submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm)
-    values ('20000000-0000-0000-0000-000000000001', '1.0.0', 270, 98, 62, 74)$$,
+    (submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, side, outline_mm)
+    values ('20000000-0000-0000-0000-000000000001', '1.0.0', 270, 98, 62, 74, 'right',
+            (select jsonb_agg(jsonb_build_array(0, i)) from generate_series(0, 255) i))$$,
   '23505', null,
   'one measurement per submission and pipeline version'
 );
@@ -36,14 +39,15 @@ select is((select count(*) from public.measurements)::int, 1, 'owner sees their 
 select is((select count(*) from public.classifications)::int, 1, 'owner sees their classification');
 select throws_ok(
   $$insert into public.measurements
-    (submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm)
-    values ('20000000-0000-0000-0000-000000000001', '9.9.9', 1, 1, 1, 1)$$,
+    (submission_id, pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, side, outline_mm)
+    values ('20000000-0000-0000-0000-000000000001', '9.9.9', 1, 1, 1, 1, 'right',
+            (select jsonb_agg(jsonb_build_array(0, i)) from generate_series(0, 255) i))$$,
   '42501', null,
   'users cannot write measurements'
 );
 select throws_ok(
-  $$insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape)
-    values ('30000000-0000-0000-0000-000000000001', '9.9.9', 'wide', 'high', 'square')$$,
+  $$insert into public.classifications (measurement_id, classifier_version, width_class, arch_class, toe_box_shape, toe_shape)
+    values ('30000000-0000-0000-0000-000000000001', '9.9.9', 'wide', 'high', 'square', 'roman')$$,
   '42501', null,
   'users cannot write classifications'
 );

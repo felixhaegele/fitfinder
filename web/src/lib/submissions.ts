@@ -26,7 +26,8 @@ export async function getMySubmission(id: string) {
        image_path, processed_image_path,
        shoe_models(brand, model, year),
        measurements(pipeline_version, length_mm, ball_width_mm, heel_width_mm, arch_width_mm, created_at,
-         classifications(classifier_version, width_class, arch_class, toe_box_shape, created_at))`,
+         classifications(classifier_version, width_class, arch_class, toe_box_shape, toe_shape,
+           created_at))`,
     )
     .eq("id", id)
     .maybeSingle();

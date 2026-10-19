@@ -39,10 +39,13 @@ RUN groupadd --system app && useradd --system --gid app --no-create-home app
 WORKDIR /app
 COPY --from=builder --chown=app:app /app /app
 
+# OPENCV_IO_MAX_IMAGE_PIXELS: OpenCV refuses to decode images over 50 MP, a backstop
+# against decompression bombs (#29; the worker also checks the size before decoding).
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PORT=8080 \
-    TEMPLATE_GEOMETRY_DIR=/app/geometry
+    TEMPLATE_GEOMETRY_DIR=/app/geometry \
+    OPENCV_IO_MAX_IMAGE_PIXELS=50000000
 
 USER app
 EXPOSE 8080
@@ -50,5 +53,7 @@ EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD ["python", "-c", "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ[\"PORT\"]}/health', timeout=2)"]
 
-# Cloud Run injects $PORT; shell form so the variable is expanded.
+# Default: the HTTP app (/health). Cloud Run injects $PORT; shell form so it's expanded.
+# The queue worker runs from the same image as a Cloud Run *Job* with the command
+# overridden (ADR 0003, deployed in #33):  python -m app.jobs.drain
 CMD exec uvicorn app.main:app --host 0.0.0.0 --port "$PORT"

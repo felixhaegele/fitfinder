@@ -1,0 +1,62 @@
+{
+  "description": "Large, wide left insole (about EU 45) in dim, uneven light, slightly blurred and noisy.",
+  "expected": {
+    "length_mm": 290.0,
+    "heel_width_mm": 68.0,
+    "arch_width_mm": 60.0,
+    "ball_width_mm": 106.0,
+    "toe_width_85_mm": 93.9,
+    "toe_width_90_mm": 81.2,
+    "toe_width_95_mm": 60.5,
+    "toe_box_shape": "round",
+    "width_class": "regular",
+    "arch_class": "medium",
+    "toe_shape": "greek"
+  },
+  "synthetic": {
+    "insole": {
+      "length_mm": 290,
+      "heel_width_mm": 68,
+      "arch_width_mm": 60,
+      "ball_width_mm": 106,
+      "toe_box": "round",
+      "side": "left",
+      "tone": 45,
+      "texture": 4
+    },
+    "placement": {
+      "along_mm": -4,
+      "across_mm": -1
+    },
+    "shot": {
+      "page_corners_px": [
+        [
+          520,
+          480
+        ],
+        [
+          2520,
+          430
+        ],
+        [
+          2860,
+          3720
+        ],
+        [
+          140,
+          3640
+        ]
+      ],
+      "size": [
+        3000,
+        4000
+      ],
+      "brightness": 0.45,
+      "blur_sigma": 2.0,
+      "noise_sigma": 8,
+      "light_gradient": 0.3,
+      "light_angle_deg": 30,
+      "seed": 5
+    }
+  }
+}
