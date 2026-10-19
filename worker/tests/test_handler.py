@@ -5,10 +5,12 @@ from uuid import UUID
 import pytest
 
 from app.jobs import config
+from app.jobs import process as process_module
 from app.jobs.handler import Outcome, Runner, handle, processed_image_path
-from app.jobs.sandbox import JobTimeoutError, Processed
+from app.jobs.sandbox import JobTimeoutError, Processed, analyse_upload
 from app.jobs.store import Message
 from app.jobs.validate import MESSAGES, ImageRejectionCode
+from app.pipeline import rejections
 from tests.jobs_fakes import (
     CLASSIFICATION,
     CLEAN_JPEG,
@@ -18,6 +20,8 @@ from tests.jobs_fakes import (
     done,
     rejected,
 )
+from tests.regression import RenderedFixture
+from tests.test_process import jpeg
 
 UPLOAD = b"\xff\xd8\xff untrusted upload"
 
@@ -136,6 +140,33 @@ def test_oversized_download_is_rejected(store: FakeStore, storage: FakeStorage) 
     handle(message(sid), store, storage, must_not_run)
 
     assert store.rows[sid].rejection_reason == MESSAGES[ImageRejectionCode.IMAGE_TOO_LARGE]
+
+
+def test_unmeasurable_insole_is_rejected_on_the_first_attempt(
+    store: FakeStore,
+    storage: FakeStorage,
+    monkeypatch: pytest.MonkeyPatch,
+    measurable: RenderedFixture,
+) -> None:
+    """A ValueError while measuring is a rejection with a reason, never a retry (#91)."""
+
+    def unmeasurable(*args: object, **kwargs: object) -> None:
+        raise ValueError("ball width must be positive, got 0.0")
+
+    monkeypatch.setattr(process_module, "measure_insole", unmeasurable)
+    sid = queued(store, storage)
+    storage.files[store.rows[sid].image_path] = jpeg(measurable.photo.image)
+
+    # The real validation + pipeline, in-process (production wraps it in the sandbox).
+    outcome = handle(message(sid, read_ct=1), store, storage, analyse_upload)
+
+    row = store.rows[sid]
+    assert outcome is Outcome.REJECTED
+    assert [s for _, s in store.status_history] == ["processing", "rejected"]  # no "queued"
+    code = rejections.RejectionCode.INSOLE_NOT_MEASURABLE
+    assert row.rejection_reason == rejections.MESSAGES[code]
+    assert row.processed_image_path is not None  # clean copy kept, like other rejections
+    assert store.archived == [7]
 
 
 @pytest.mark.parametrize("attempt", range(1, config.MAX_ATTEMPTS))

@@ -7,13 +7,17 @@ starting at [0, 0], and psycopg can't serialise numpy values.
 
 import json
 import math
+from collections.abc import Callable
 from pathlib import Path
+from types import SimpleNamespace
+from typing import cast
 from uuid import uuid4
 
 import numpy as np
 import pytest
 from psycopg.types.json import Jsonb
 
+from app.jobs import process as process_module
 from app.jobs.process import (
     DEFAULT_ANALYZER,
     Result,
@@ -24,7 +28,11 @@ from app.jobs.process import (
 )
 from app.jobs.store import classification_params, measurement_params
 from app.pipeline import config as pipeline_config
+from app.pipeline.classify import ContradictoryClassificationError
 from app.pipeline.measure import InsoleMeasurements
+from app.pipeline.rejections import MESSAGES, Rejection, RejectionCode
+from app.pipeline.segment import Segmentation
+from app.pipeline.warp import PageWarp
 from tests.regression import TOLERANCE_MM, load_fixture, render_fixture
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -95,6 +103,57 @@ def test_measurement_row_maps_toe_widths_and_taper() -> None:
 def test_measurement_row_refuses_a_zero_ball_width() -> None:
     with pytest.raises(ValueError, match="ball width"):
         measurement_row(_measurements(ball_width_mm=0.0))
+
+
+# --- unmeasurable insoles become rejections, not retries (#91) ---
+
+# measure_and_classify only reads these two attributes; the pipeline is stubbed out.
+WARP = cast(PageWarp, SimpleNamespace(template=None))
+SEGMENTATION = cast(Segmentation, SimpleNamespace(contour_mm=np.zeros((0, 2))))
+
+
+def _measuring(result: InsoleMeasurements | Exception) -> Callable[..., InsoleMeasurements]:
+    def fake(*args: object, **kwargs: object) -> InsoleMeasurements:
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    return fake
+
+
+@pytest.mark.parametrize(
+    ("measured", "detail"),
+    [
+        (ValueError("zero-size array"), "zero-size array"),  # measure_insole itself
+        (_measurements(length_mm=math.nan), "length_mm is not finite"),
+        (_measurements(ball_width_mm=0.0), "ball width"),
+        (_measurements(outline_mm=_outline(255)), "outline must be"),
+    ],
+    ids=["measure-raises", "non-finite", "zero-ball-width", "malformed-outline"],
+)
+def test_unmeasurable_insole_is_rejected_with_a_reason(
+    monkeypatch: pytest.MonkeyPatch, measured: InsoleMeasurements | Exception, detail: str
+) -> None:
+    monkeypatch.setattr(process_module, "measure_insole", _measuring(measured))
+
+    with pytest.raises(Rejection) as excinfo:
+        measure_and_classify(WARP, SEGMENTATION)
+
+    assert excinfo.value.code is RejectionCode.INSOLE_NOT_MEASURABLE
+    assert excinfo.value.message == MESSAGES[RejectionCode.INSOLE_NOT_MEASURABLE]
+    assert detail in excinfo.value.detail  # for the logs, not the user
+
+
+def test_classifier_bug_is_not_turned_into_a_rejection(monkeypatch: pytest.MonkeyPatch) -> None:
+    def contradictory(m: InsoleMeasurements) -> None:
+        raise ContradictoryClassificationError("pointed toe box with egyptian toe shape")
+
+    monkeypatch.setattr(process_module, "measure_insole", _measuring(_measurements()))
+    monkeypatch.setattr(process_module, "classify", contradictory)
+
+    # Escapes as a crash, so the worker retries it and Sentry sees it.
+    with pytest.raises(ContradictoryClassificationError):
+        measure_and_classify(WARP, SEGMENTATION)
 
 
 def test_insert_params_match_column_order_and_types() -> None:

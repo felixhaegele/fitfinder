@@ -23,7 +23,7 @@ import numpy as np
 from app.pipeline import config as pipeline_config
 from app.pipeline.classify import Classification, classify
 from app.pipeline.measure import OUTLINE_POINTS, InsoleMeasurements, measure_insole
-from app.pipeline.rejections import Rejection
+from app.pipeline.rejections import Rejection, RejectionCode
 from app.pipeline.segment import Segmentation, segment_insole
 from app.pipeline.template import FloatArray
 from app.pipeline.warp import Image, PageWarp, warp_to_page
@@ -134,13 +134,23 @@ def classification_row(c: Classification) -> ClassificationRow:
 
 
 def measure_and_classify(warp: PageWarp, segmentation: Segmentation, /) -> Analysis:
-    """Measure the segmented outline (side inferred from its shape) and classify it."""
-    measurements = measure_insole(segmentation.contour_mm, warp.template)
-    for name, value in measurements.scalars().items():
-        if isinstance(value, float) and not math.isfinite(value):
-            raise ValueError(f"{name} is not finite: {value}")
+    """Measure the segmented outline (side inferred from its shape) and classify it.
+
+    An outline we can't turn into a valid row (non-finite value, malformed outline, zero
+    ball width) is an oddly shaped insole, not a bug: it becomes a `Rejection`, so the
+    user gets a reason right away instead of three retries and a generic error (#91).
+    `classify` stays outside: a contradictory classification is our bug and is retried.
+    """
+    try:
+        measurements = measure_insole(segmentation.contour_mm, warp.template)
+        for name, value in measurements.scalars().items():
+            if isinstance(value, float) and not math.isfinite(value):
+                raise ValueError(f"{name} is not finite: {value}")
+        measurement = measurement_row(measurements)
+    except ValueError as e:
+        raise Rejection(RejectionCode.INSOLE_NOT_MEASURABLE, str(e)) from e
     return Analysis(
-        measurement=measurement_row(measurements),
+        measurement=measurement,
         classification=classification_row(classify(measurements)),
     )
 
