@@ -36,7 +36,8 @@ export default withSentryConfig(nextConfig, {
   authToken: process.env.SENTRY_AUTH_TOKEN,
   sourcemaps: {
     disable: !process.env.SENTRY_AUTH_TOKEN,
-    deleteSourcemapsAfterUpload: true,
+    // Also strips browser maps when nothing was uploaded; the coverage build needs them.
+    deleteSourcemapsAfterUpload: !coverageBuild,
   },
   silent: !process.env.CI,
   telemetry: false,

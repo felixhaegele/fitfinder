@@ -12,6 +12,13 @@ if (!existsSync(SERVER_COVERAGE_DIR) || readdirSync(SERVER_COVERAGE_DIR).length 
   throw new Error(`No server coverage in ${SERVER_COVERAGE_DIR}. Did next start exit cleanly?`);
 }
 
+// Without browser maps, client components silently drop out of the report (e.g. Sentry's
+// deleteSourcemapsAfterUpload strips them, see next.config.ts).
+const staticFiles = readdirSync(".next/static", { recursive: true });
+if (!staticFiles.some((file) => String(file).endsWith(".js.map"))) {
+  throw new Error("No browser source maps in .next/static. Was the build made with E2E_COVERAGE=1?");
+}
+
 const report = MCR(coverageOptions);
 await report.addFromDir(SERVER_COVERAGE_DIR);
 await report.generate();
