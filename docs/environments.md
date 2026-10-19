@@ -49,16 +49,28 @@ All accounts belong to the owner and use GitHub login.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | public config (RLS protects the data) | same as above | web |
 | `SUPABASE_SECRET_KEY` | **secret**, bypasses RLS | `web/.env.local` (local dev key); **Vercel: still to be added as Secret** for account deletion (#65) | web server only (`web/src/lib/supabase/admin.ts`), e2e tests |
 | `SONAR_TOKEN` | secret | GitHub repo secret (Actions) | CI `sonar` job |
-| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` | secrets | planned: GitHub Environments `staging` / `production` (#34) | migrations via CI |
+| `SUPABASE_ACCESS_TOKEN` | secret | GitHub Environments `staging` and `production` | `db-deploy.yml` |
+| `SUPABASE_DB_PASSWORD` | secret, different per project | GitHub Environments `staging` / `production` | `db-deploy.yml` |
+| `SUPABASE_PROJECT_REF` | variable (not secret) | GitHub Environments `staging` / `production` | `db-deploy.yml` |
 | Database passwords | secrets | owner's password manager only | `supabase link` / `db push` |
 
 Rules: `NEXT_PUBLIC_*` values end up in the browser bundle, so never give a secret that prefix. Secrets go in the dashboard or `gh secret set` from the owner's own terminal, never into chat, code or committed files. When adding a variable, also add it to `.env.example`.
 
 ## Runbooks
 
-### Apply migrations to the hosted databases (manual, until #34)
+### Apply migrations to the hosted databases
 
-From the repo root, in the owner's terminal (it asks for the database password):
+**Normally CI does it** ([`.github/workflows/db-deploy.yml`](../.github/workflows/db-deploy.yml)):
+
+1. **PR** that touches `supabase/migrations/`: the job `dry-run` lists what would be applied to staging. Nothing changes
+2. **Merge to `main`**: `staging` applies the migrations
+3. Then `production` waits for approval: Actions → the run → **Review deployments** → `production` → **Approve and deploy**
+
+GitHub Environments: `staging` (any branch can read its secrets; the workflow only writes on `main`) and `production` (only `main`, requires the owner's approval). Settings → Environments.
+
+Migrations only go forward: a rollback is a new migration that undoes the change. That's why staging always goes first.
+
+**Manually** (e.g. the first setup, or to re-seed staging), from the repo root in the owner's terminal (it asks for the database password):
 
 ```sh
 supabase link --project-ref xjusmksmnnywliwgspmf   # staging
