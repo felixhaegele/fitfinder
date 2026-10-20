@@ -14,6 +14,7 @@ class RejectionCode(StrEnum):
     INSOLE_NOT_FOUND = "insole_not_found"
     TOO_BLURRY = "too_blurry"
     INSOLE_TOUCHES_EDGE = "insole_touches_edge"
+    INSOLE_NOT_MEASURABLE = "insole_not_measurable"
 
 
 MESSAGES: dict[RejectionCode, str] = {
@@ -42,6 +43,11 @@ MESSAGES: dict[RejectionCode, str] = {
         "The insole reaches over the grey dashed lines or out of the photo. Place it fully "
         "inside the dashed lines with white paper all around it, and make sure the whole "
         "sheet is in the photo. Insoles longer than about 29 cm don't fit on A4 yet."
+    ),
+    RejectionCode.INSOLE_NOT_MEASURABLE: (
+        "We found the insole but couldn't measure its shape. Make sure only the insole is "
+        "on the template, lying flat and not folded or overlapping anything, then take the "
+        "photo again."
     ),
 }
 
