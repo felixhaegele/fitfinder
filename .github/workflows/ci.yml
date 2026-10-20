@@ -46,6 +46,7 @@ jobs:
               - '.github/workflows/ci.yml'
             print:
               - 'print/**'
+              - 'web/public/fitfinder-template-*.pdf' # the copy users download
               - '.github/workflows/ci.yml'
 
   web:
@@ -172,6 +173,14 @@ jobs:
       - run: uv run mypy
       - run: uv run pytest
       - run: uv run python -m fitfinder_template
+      # The website serves a committed copy. It must be exactly what the generator makes
+      # from the geometry, or users would print a sheet the worker doesn't measure with.
+      - name: Check the website's template PDF is up to date
+        run: |
+          if ! cmp out/fitfinder-template-a4-v1.pdf ../web/public/fitfinder-template-a4-v1.pdf; then
+            echo "::error file=web/public/fitfinder-template-a4-v1.pdf::Out of date. Run: cd print && uv run python -m fitfinder_template -o ../web/public/fitfinder-template-a4-v1.pdf"
+            exit 1
+          fi
       - uses: actions/upload-artifact@v7
         with:
           name: template-pdf

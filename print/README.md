@@ -25,7 +25,13 @@ uv sync
 uv run python -m fitfinder_template        # → out/fitfinder-template-a4-v1.pdf (gitignored)
 ```
 
-The output is reproducible: the same geometry always gives a byte-identical PDF.
+The output is reproducible: the same geometry always gives a byte-identical PDF (reportlab's `invariant` mode pins the creation date and document ID).
+
+The website serves a committed copy at `web/public/fitfinder-template-a4-v1.pdf` (page `/template`). CI regenerates the PDF and fails if the committed copy differs, so it can't drift from the geometry the worker measures with. After changing the generator, update it with:
+
+```sh
+uv run python -m fitfinder_template -o ../web/public/fitfinder-template-a4-v1.pdf
+```
 
 ## How it fits together
 
