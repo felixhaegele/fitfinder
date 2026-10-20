@@ -1,4 +1,6 @@
-import { type APIRequestContext, expect, test } from "@playwright/test";
+import type { APIRequestContext } from "@playwright/test";
+
+import { expect, test } from "./fixtures";
 
 import { adminHeaders, adminRest, SUPABASE_URL } from "./helpers";
 
