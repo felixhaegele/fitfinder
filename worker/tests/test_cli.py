@@ -10,7 +10,8 @@ import cv2
 import numpy as np
 import pytest
 
-from app.cli import EXIT_ERROR, EXIT_MEASURED, EXIT_REJECTED, main
+from app.cli import EXIT_ERROR, EXIT_MEASURED, EXIT_REJECTED, main, read_photo
+from app.jobs.config import MAX_UPLOAD_BYTES
 from app.jobs.validate import MESSAGES as IMAGE_MESSAGES
 from app.jobs.validate import ImageRejectionCode
 from app.overlay import draw_overlay
@@ -38,9 +39,11 @@ CLASS_LABELS = {
 }
 
 
-def run(*args: str | Path) -> tuple[int, str]:
+def run(*args: str | Path, root: Path = Path("/")) -> tuple[int, str]:
+    # pytest's tmp_path isn't under the home folder (the CLI's default --root), so these
+    # tests widen the root. The root check itself is tested below.
     out = io.StringIO()
-    code = main([str(a) for a in args], out=out)
+    code = main([*(str(a) for a in args), "--root", str(root)], out=out)
     return code, out.getvalue()
 
 
@@ -138,6 +141,58 @@ def test_unwritable_overlay_is_an_error(tmp_path: Path, measurable: RenderedFixt
     )
 
     assert code == EXIT_ERROR
+
+
+def test_photo_outside_root_is_refused(
+    tmp_path: Path, measurable: RenderedFixture, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "allowed"
+    root.mkdir()
+
+    code, output = run("measure", photo_file(tmp_path, measurable), root=root)
+
+    assert code == EXIT_ERROR
+    assert output == ""
+    assert "is outside" in capsys.readouterr().err
+
+
+def test_symlink_escaping_root_is_refused(tmp_path: Path, measurable: RenderedFixture) -> None:
+    root = tmp_path / "allowed"
+    root.mkdir()
+    (root / "link.jpg").symlink_to(photo_file(tmp_path, measurable))
+
+    code, _ = run("measure", root / "link.jpg", root=root)
+
+    assert code == EXIT_ERROR
+
+
+@pytest.mark.parametrize("name", ["notes.txt", "photo.jpg/"])
+def test_non_photo_paths_are_refused(tmp_path: Path, name: str) -> None:
+    (tmp_path / "photo.jpg").mkdir()  # a directory with a photo-like name
+    (tmp_path / "notes.txt").write_text("hi")
+
+    code, _ = run("measure", tmp_path / name)
+
+    assert code == EXIT_ERROR
+
+
+def test_overlay_must_be_png_inside_root(tmp_path: Path, measurable: RenderedFixture) -> None:
+    photo = photo_file(tmp_path, measurable)
+
+    assert run("measure", photo, "--debug", tmp_path / "o.jpg")[0] == EXIT_ERROR
+    root = tmp_path / "allowed"
+    root.mkdir()
+    (root / "p.jpg").write_bytes(photo.read_bytes())
+    assert run("measure", root / "p.jpg", "--debug", tmp_path / "o.png", root=root)[0] == (
+        EXIT_ERROR
+    )
+
+
+def test_read_photo_reads_at_most_one_byte_over_the_upload_limit(tmp_path: Path) -> None:
+    big = tmp_path / "big.jpg"
+    big.write_bytes(b"\0" * (MAX_UPLOAD_BYTES + 1000))
+
+    assert len(read_photo(big, tmp_path)) == MAX_UPLOAD_BYTES + 1
 
 
 @pytest.mark.parametrize("args", [[], ["measure"], ["measure", "a.jpg", "--nope"]])

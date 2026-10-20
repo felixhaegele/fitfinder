@@ -9,6 +9,11 @@ reason the photo was rejected. `--debug` also writes the photo with markers, con
 measurement lines drawn on it (`app/overlay.py`).
 
 Exit codes: 0 measured, 2 rejected (a normal outcome, with a reason), 1 error.
+
+Paths are checked before anything is read or written: they must resolve (after `~` and
+symlinks) to a location inside `--root`, your home folder by default. The photo must be a
+regular JPEG/PNG/WebP file, and at most `MAX_UPLOAD_BYTES` are read, the same limit as
+uploads. The overlay must be a `.png`.
 """
 
 import argparse
@@ -21,6 +26,7 @@ from typing import NoReturn, TextIO
 import cv2
 import numpy as np
 
+from app.jobs.config import MAX_UPLOAD_BYTES
 from app.jobs.process import Analysis, Result, measure_and_classify, process
 from app.jobs.validate import InvalidImage, clean_image
 from app.overlay import draw_overlay
@@ -53,8 +59,43 @@ CLASS_LABELS = {
 }
 
 
+PHOTO_SUFFIXES = frozenset({".jpg", ".jpeg", ".png", ".webp"})
+
+
 class CliError(Exception):
     pass
+
+
+def resolve_inside(path: Path, root: Path) -> Path:
+    """`path` with `~` and symlinks resolved, refused unless it lies inside `root`."""
+    base = root.expanduser().resolve()
+    resolved = path.expanduser().resolve()
+    if not resolved.is_relative_to(base):
+        raise CliError(f"{path} is outside {base}; pass --root to allow another folder")
+    return resolved
+
+
+def read_photo(path: Path, root: Path) -> bytes:
+    """The photo's bytes, after the path checks in the module docstring."""
+    photo = resolve_inside(path, root)
+    if photo.suffix.lower() not in PHOTO_SUFFIXES:
+        allowed = ", ".join(sorted(PHOTO_SUFFIXES))
+        raise CliError(f"couldn't read {path}: expected a photo ({allowed})")
+    if not photo.is_file():
+        raise CliError(f"couldn't read {path}: not a file")
+    try:
+        with photo.open("rb") as f:
+            # One byte over the limit is enough for clean_image to reject it as too large.
+            return f.read(MAX_UPLOAD_BYTES + 1)
+    except OSError as e:
+        raise CliError(f"couldn't read {path}: {e.strerror or e}") from e
+
+
+def overlay_path(path: Path, root: Path) -> Path:
+    target = resolve_inside(path, root)
+    if target.suffix.lower() != ".png":
+        raise CliError(f"the debug overlay must be a .png file, got {path}")
+    return target
 
 
 class _Parser(argparse.ArgumentParser):
@@ -111,11 +152,10 @@ def _write_overlay(path: Path, photo: Image, capture: _Capture) -> None:
         raise CliError(f"couldn't write the overlay to {path}")
 
 
-def measure(photo_path: Path, debug: Path | None, out: TextIO) -> int:
-    try:
-        data = photo_path.read_bytes()
-    except OSError as e:
-        raise CliError(f"couldn't read {photo_path}: {e.strerror or e}") from e
+def measure(photo_path: Path, debug: Path | None, out: TextIO, root: Path | None = None) -> int:
+    root = Path.home() if root is None else root
+    data = read_photo(photo_path, root)
+    debug = None if debug is None else overlay_path(debug, root)
     try:
         clean = clean_image(data)
     except InvalidImage as e:
@@ -146,11 +186,17 @@ def main(argv: Sequence[str] | None = None, out: TextIO | None = None) -> int:
     )
     m.add_argument("photo", type=Path, help="JPEG, PNG or WebP photo")
     m.add_argument("--debug", type=Path, metavar="OUT.png", help="write a debug overlay image")
+    m.add_argument(
+        "--root",
+        type=Path,
+        default=Path.home(),
+        help="only read and write files inside this folder (default: your home folder)",
+    )
     args = parser.parse_args(argv)
 
     out = out or sys.stdout
     try:
-        return measure(args.photo, args.debug, out)
+        return measure(args.photo, args.debug, out, args.root)
     except Exception as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_ERROR
