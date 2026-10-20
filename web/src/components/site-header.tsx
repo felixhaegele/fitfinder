@@ -8,9 +8,15 @@ export function SiteHeader() {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
       <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-3">
-        <Link href="/" className="font-semibold">
-          FitFinder
-        </Link>
+        <nav className="flex items-center gap-6">
+          <Link href="/" className="font-semibold">
+            FitFinder
+          </Link>
+          {/* Public, so outside the Suspense below: visible whether or not you're logged in. */}
+          <Link href="/shoes" className="text-sm font-medium">
+            Shoes
+          </Link>
+        </nav>
         {/* The rest of the page is static; only this part waits for the session. */}
         <Suspense fallback={<span className="text-sm text-zinc-400">…</span>}>
           <AuthStatus />
