@@ -6,7 +6,9 @@ Runs only when the stack is up and these are set (values from `supabase status`)
     SUPABASE_SECRET_KEY=sb_secret_...
     SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
 
-Otherwise (e.g. in CI, where the worker job has no database) the tests are skipped.
+Otherwise (e.g. in CI's `worker` job, which has no database) the tests are skipped.
+CI runs them in the `supabase` job with REQUIRE_SUPABASE=1: there, an unreachable stack
+fails the run instead, because a skipped module would look like a pass.
 
 The local stack may be shared with other work, so the tests never drain the real
 `submissions` queue: each test gets its own temporary pgmq queue, and the message the
@@ -49,8 +51,16 @@ def _stack_available() -> bool:
     return True
 
 
+_STACK_AVAILABLE = _stack_available()
+if os.environ.get("REQUIRE_SUPABASE") == "1" and not _STACK_AVAILABLE:
+    raise RuntimeError(
+        "REQUIRE_SUPABASE=1 but the Supabase stack isn't reachable: set "
+        + ", ".join(ENV)
+        + " from `supabase status`"
+    )
+
 pytestmark = pytest.mark.skipif(
-    not _stack_available(), reason="local Supabase stack not running or env not set"
+    not _STACK_AVAILABLE, reason="local Supabase stack not running or env not set"
 )
 
 Conn = psycopg.Connection[dict[str, Any]]

@@ -59,6 +59,8 @@ export SUPABASE_SECRET_KEY=sb_secret_...   # "Secret" from `supabase status`
 uv run pytest tests/test_integration.py
 ```
 
+CI runs them in the `supabase` job with `REQUIRE_SUPABASE=1`, which makes an unreachable stack an error instead of a skip. Set it locally too when you want to be sure they ran.
+
 ## Develop
 
 ```sh

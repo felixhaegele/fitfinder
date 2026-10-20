@@ -211,19 +211,21 @@ jobs:
           docker run --rm fitfinder-worker:ci python -c \
             "from app.pipeline.template import load_template; import cv2; print(load_template().id, cv2.__version__)"
 
-  # Applies every migration to a fresh Postgres, lints the schema and runs the pgTAP tests.
-  # Only the database container is started (not Auth/Storage/Studio): that's all migrations
-  # and RLS tests need, and it boots in a fraction of the time.
+  # Applies every migration to a fresh Postgres, lints the schema and runs the pgTAP tests,
+  # then the worker's integration tests (enqueue -> drain -> rows and files) against the
+  # same stack. Those need Storage, Auth and the API gateway too, so it starts more than the
+  # database. Also runs when only the worker changed (and on every push to main): a worker
+  # change can break its inserts just as a migration can.
   supabase:
     needs: changes
-    if: needs.changes.outputs.supabase == 'true'
+    if: needs.changes.outputs.supabase == 'true' || needs.changes.outputs.worker == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - uses: supabase/setup-cli@v3
         with:
           version: 2.121.0 # keep in step with the CLI used locally
-      - run: supabase db start
+      - run: supabase start -x studio,imgproxy,realtime,postgres-meta,edge-runtime,logflare,vector,supavisor
       - run: supabase db lint --fail-on error
       - run: supabase test db
       # The web app's TypeScript types are generated from the schema. If a migration
@@ -235,11 +237,39 @@ jobs:
             echo "::error file=web/src/lib/database.types.ts::Out of date. Run: supabase gen types typescript --local > web/src/lib/database.types.ts"
             exit 1
           fi
+      - name: Export the local stack's URL and keys for the worker
+        run: |
+          supabase status -o json > /tmp/supabase.json
+          {
+            echo "SUPABASE_URL=$(jq -r .API_URL /tmp/supabase.json)"
+            # Local dev key, not a real secret.
+            echo "SUPABASE_SECRET_KEY=$(jq -r .SECRET_KEY /tmp/supabase.json)"
+            echo "SUPABASE_DB_URL=$(jq -r .DB_URL /tmp/supabase.json)"
+          } >> "$GITHUB_ENV"
+      - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
+        with:
+          enable-cache: true
+          cache-dependency-glob: worker/uv.lock
+      - run: uv sync --locked
+        working-directory: worker
+      # REQUIRE_SUPABASE=1 turns "stack not reachable" into an error instead of a skip,
+      # so this step can't pass without running the tests. -rs lists any skips anyway.
+      - name: Worker integration tests
+        working-directory: worker
+        env:
+          REQUIRE_SUPABASE: "1"
+        run: uv run pytest tests/test_integration.py -rs --cov-report=xml:coverage-integration.xml
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: coverage-worker-integration
+          path: worker/coverage-integration.xml
+          retention-days: 7
 
   # Static analysis + coverage across both packages. Skips itself when the token
   # isn't available (e.g. Dependabot PRs, which don't get repo secrets).
   sonar:
-    needs: [changes, web, worker]
+    needs: [changes, web, worker, supabase]
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     env:
@@ -270,7 +300,12 @@ jobs:
           if [ -n "$cobertura" ]; then
             sed 's#<source>app</source>#<source>worker/app</source>#' "$cobertura" > worker/coverage.xml
           fi
-          echo "web coverage: ${lcov:-none}, worker coverage: ${cobertura:-none}"
+          # Worker integration tests (supabase job); Sonar merges both worker reports.
+          integration=$(find coverage -name coverage-integration.xml | head -n 1)
+          if [ -n "$integration" ]; then
+            sed 's#<source>app</source>#<source>worker/app</source>#' "$integration" > worker/coverage-integration.xml
+          fi
+          echo "web coverage: ${lcov:-none}, worker coverage: ${cobertura:-none}, worker integration coverage: ${integration:-none}"
       - uses: SonarSource/sonarqube-scan-action@v8
         if: env.SONAR_TOKEN != ''
       - if: env.SONAR_TOKEN == ''
