@@ -16,7 +16,9 @@ Built step by step in Milestone 5 (#20). Each step is a pure function: photo in,
    - no insole stands out from the paper (`insole_not_found`),
    - the insole's edge is smeared by more than 0.5 mm (`too_blurry`), or
    - the insole crosses the dashed guides or the photo's edge (`insole_touches_edge`).
-3. Measurements and outline (#23), classification (#24): coming next.
+3. **Outline → measurements** (`measure.py`, #23) and **classification** (`classify.py`, #24). `process.py` wires them together for the worker.
+
+To try the pipeline on one photo, use the [measure CLI](#measure-one-photo-cli).
 
 All tunable numbers live in `app/pipeline/config.py`. Rejection codes and their user-facing messages live in `app/pipeline/rejections.py`.
 
@@ -68,6 +70,31 @@ cd worker
 uv sync                               # creates .venv (downloads Python 3.12 if needed)
 uv run fastapi dev app/main.py        # http://127.0.0.1:8000/health, auto-reload
 ```
+
+## Measure one photo (CLI)
+
+Runs the whole pipeline on a photo, the same way the worker does but without Supabase. Use it to check a real photo or to see why one was rejected.
+
+```sh
+uv run python -m app.cli measure photo.jpg                    # print measurements + classes
+uv run python -m app.cli measure photo.jpg --debug out.png    # ... and draw what it saw
+```
+
+- It prints the length, the heel, arch and ball widths and the toe widths in mm, then the classes. If the photo is rejected, it prints the reason the user would see, plus a technical detail.
+- **Exit codes:** `0` measured, `2` rejected, `1` error (missing file, bad arguments, a crash). Scripts can tell a bad photo from a broken tool.
+- **`--debug out.png`** writes the photo with an overlay:
+  - green: markers found, with their ids;
+  - red: template markers that weren't found, drawn where the homography expects them;
+  - grey: the measuring zone;
+  - yellow: the insole contour;
+  - magenta: the length, from the heel point to the toe tip;
+  - coloured lines: the heel, arch, ball and toe widths, at the exact place each is measured.
+
+  If the photo was rejected early, it shows only as far as the pipeline got, e.g. just the markers.
+- It reads the photo with the worker's validation (`clean_image`), so EXIF rotation, size limits and file-type checks behave exactly as for an upload.
+- To try it without a photo of your own, render the synthetic fixtures first: `uv run python -m tests.regression /tmp/fixtures`.
+
+The lines come from `measure.measurement_lines`, the same function that produces the numbers, so the drawing can't disagree with the result.
 
 ## Check (same as CI)
 

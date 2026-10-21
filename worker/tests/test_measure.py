@@ -202,3 +202,39 @@ def test_fixture_photo_measures_within_tolerance(measurable: RenderedFixture) ->
     assert_valid_outline(m)
     # The stored 256 points carry the same shape: measured again, they agree.
     assert_measurements_match(measure_in_frame(m.outline_mm), measurable.fixture.expected)
+
+
+# --- Frame placement and measurement lines, for the debug overlay (#26) ---
+
+
+def test_frame_placement_maps_the_frame_back_onto_the_page(
+    template: Template, measurable: RenderedFixture
+) -> None:
+    seg = segment_insole(warp_to_page(measurable.photo.image))
+    frame, heel, placed = measure.locate_insole(seg.contour_mm, template)
+
+    page = placed.to_page_mm(frame)
+
+    # Back on the page, the outline lies where the segmented contour is.
+    assert placed.side == measurable.fixture.shape.side
+    nearest = np.min(np.linalg.norm(page[:, None] - seg.contour_mm[None], axis=2), axis=1)
+    assert nearest.max() < 1.0  # smoothing moves it a little
+    # The frame's origin is the heel point (page_to_y_up is its own inverse).
+    heel_on_page = measure.page_to_y_up(placed.origin[None])
+    assert np.allclose(placed.to_page_mm(frame[heel : heel + 1]), heel_on_page)
+
+
+def test_measurement_lines_are_where_the_numbers_come_from(
+    template: Template, measurable: RenderedFixture
+) -> None:
+    seg = segment_insole(warp_to_page(measurable.photo.image))
+    frame, _, _ = measure.locate_insole(seg.contour_mm, template)
+
+    lines = measure.measurement_lines(frame)
+    values = measure.measure_frame(frame)
+
+    assert values["length_mm"] == lines.length
+    for name, line in lines.widths.items():
+        assert values[name] == line.width
+        assert line.x_max - line.x_min == pytest.approx(line.width)
+        assert lines.y0 <= line.y <= lines.y0 + lines.length

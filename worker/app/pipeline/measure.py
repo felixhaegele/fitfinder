@@ -253,37 +253,93 @@ def canonical_outline(frame: FloatArray, heel: int, n: int = OUTLINE_POINTS) -> 
     return np.asarray(out, np.float64)
 
 
-def measure_frame(frame: FloatArray) -> dict[str, float]:
+@dataclass(frozen=True)
+class WidthLine:
+    """A width as measured: the line y = `y` across the outline, in the frame."""
+
+    y: float
+    x_min: float
+    x_max: float
+    width: float  # x_max - x_min, or 0 where the line misses the outline
+
+
+@dataclass(frozen=True)
+class MeasurementLines:
+    """Where each measurement is taken, in the frame. The numbers and the lines a debug
+    overlay draws come from this one place, so they can't disagree."""
+
+    y0: float  # the heel end
+    length: float
+    widths: dict[str, WidthLine]
+
+
+def measurement_lines(frame: FloatArray) -> MeasurementLines:
     """The measurement definitions (`tests/insoles.py`) applied along y."""
     y0 = float(frame[:, 1].min())
     length = float(frame[:, 1].max()) - y0
 
-    def region(lo: float, hi: float) -> FloatArray:
+    def lines(ys: FloatArray) -> list[WidthLine]:
+        xmin, xmax = x_extent_along(frame, ys)
+        widths = np.nan_to_num(xmax - xmin, nan=0.0)  # same as widths_along
+        return [
+            WidthLine(float(y), float(a), float(b), float(w))
+            for y, a, b, w in zip(ys, xmin, xmax, widths, strict=True)
+        ]
+
+    def region(lo: float, hi: float) -> list[WidthLine]:
         ys = y0 + length * np.linspace(lo, hi, _REGION_SAMPLES)
         # A line exactly through the heel point or toe tip has zero width; skip it.
-        return widths_along(frame, ys[1:-1] if lo <= 0.0 or hi >= 1.0 else ys)
+        return lines(ys[1:-1] if lo <= 0.0 or hi >= 1.0 else ys)
 
-    toe = widths_along(frame, y0 + length * np.array(TOE_WIDTH_AT))
-    return {
-        "length_mm": length,
-        "heel_width_mm": float(region(*HEEL_REGION).max()),
-        "arch_width_mm": float(region(*ARCH_REGION).min()),
-        "ball_width_mm": float(region(*BALL_REGION).max()),
-        **{
-            f"toe_width_{round(f * 100)}_mm": float(w)
-            for f, w in zip(TOE_WIDTH_AT, toe, strict=True)
+    def widest(ls: list[WidthLine]) -> WidthLine:
+        return max(ls, key=lambda line: line.width)  # first of equals, like np.argmax
+
+    toe = lines(y0 + length * np.array(TOE_WIDTH_AT))
+    return MeasurementLines(
+        y0=y0,
+        length=length,
+        widths={
+            "heel_width_mm": widest(region(*HEEL_REGION)),
+            "arch_width_mm": min(region(*ARCH_REGION), key=lambda line: line.width),
+            "ball_width_mm": widest(region(*BALL_REGION)),
+            **{
+                f"toe_width_{round(f * 100)}_mm": line
+                for f, line in zip(TOE_WIDTH_AT, toe, strict=True)
+            },
         },
-    }
+    )
 
 
-def measure_insole(
+def measure_frame(frame: FloatArray) -> dict[str, float]:
+    """The measurements in mm, from `measurement_lines`."""
+    m = measurement_lines(frame)
+    return {"length_mm": m.length, **{k: line.width for k, line in m.widths.items()}}
+
+
+@dataclass(frozen=True)
+class FramePlacement:
+    """Where the frame (heel point at the origin, toe along +y, mirrored onto a right
+    foot) lies on the page. Lets a debug overlay draw frame coordinates on the photo."""
+
+    origin: FloatArray  # the heel point, y-up page mm
+    axis: FloatArray  # unit vector heel -> toe, y-up
+    side: Side
+
+    def to_page_mm(self, pts: FloatArray) -> FloatArray:
+        """Frame points (n, 2) -> page mm (y down). Inverse of steps 1-4."""
+        p = np.asarray(pts, np.float64)
+        if self.side == "left":
+            p = p * [-1.0, 1.0]
+        right = np.array([self.axis[1], -self.axis[0]])  # as in to_frame
+        y_up = self.origin + p[:, :1] * right + p[:, 1:] * self.axis
+        return np.column_stack([y_up[:, 0], -y_up[:, 1]])
+
+
+def locate_insole(
     contour_mm: FloatArray, template: Template, side: Side | None = None
-) -> InsoleMeasurements:
-    """Measure an insole outline given in page mm (e.g. `Segmentation.contour_mm`).
-
-    `side` overrides the shape-based left/right detection, for when the user says which
-    insole it is.
-    """
+) -> tuple[FloatArray, int, FramePlacement]:
+    """Steps 1-4: the smoothed outline in the frame (mirrored onto a right foot), the
+    heel point's index in it, and where the frame lies on the page."""
     pts = smooth_closed(
         page_to_y_up(contour_mm), config.OUTLINE_STEP_MM, config.OUTLINE_SMOOTHING_MM
     )
@@ -295,10 +351,21 @@ def measure_insole(
     side = side or detect_side(frame)
     if side == "left":
         frame = frame * [-1.0, 1.0]
+    return frame, heel, FramePlacement(origin=pts[heel], axis=axis, side=side)
 
+
+def measure_insole(
+    contour_mm: FloatArray, template: Template, side: Side | None = None
+) -> InsoleMeasurements:
+    """Measure an insole outline given in page mm (e.g. `Segmentation.contour_mm`).
+
+    `side` overrides the shape-based left/right detection, for when the user says which
+    insole it is.
+    """
+    frame, heel, placed = locate_insole(contour_mm, template, side)
     values = measure_frame(frame)
     return InsoleMeasurements(
-        side=side,
+        side=placed.side,
         length_mm=values["length_mm"],
         heel_width_mm=values["heel_width_mm"],
         arch_width_mm=values["arch_width_mm"],
