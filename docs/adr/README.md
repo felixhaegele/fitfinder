@@ -16,3 +16,4 @@ To add one, copy [`template.md`](template.md) to `NNNN-short-title.md` (next fre
 | 0008 | [Track errors with Sentry (EU region), scrubbing personal data before it leaves the app](0008-sentry-error-tracking.md) | Accepted |
 | 0009 | [Measure insoles in one heel-to-toe frame, found from the outline's shape](0009-insole-frame-and-measuring.md) | Accepted |
 | 0010 | [Validate and measure uploads in a time-limited child process, behind one pipeline seam](0010-untrusted-uploads-in-worker.md) | Accepted |
+| 0011 | [Run the worker as Cloud Run Jobs, managed with Terraform, deployed via Workload Identity Federation](0011-worker-on-cloud-run.md) | Accepted |

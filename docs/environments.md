@@ -22,7 +22,7 @@ All accounts belong to the owner and use GitHub login.
 | Supabase | Postgres, Auth, Storage, pgmq queue | org `ghmjttkdsvszvwzkunaj`; projects below |
 | Vercel (Hobby plan, non-commercial) | hosts `web/` | team `felixhaegeles-projects`, project `fitfinder-prod` |
 | SonarQube Cloud (free, public project) | code quality + coverage on every PR | org `felixhaegele`, project `felixhaegele_fitfinder` |
-| Google Cloud | worker on Cloud Run | not set up yet (#33) |
+| Google Cloud | worker on Cloud Run Jobs (ADR 0011) | project: see `infra/terraform.tfvars` / `gcloud config get project`; region `europe-west1`; Terraform in [`infra/`](../infra/) |
 
 ### Supabase projects
 
@@ -49,6 +49,8 @@ All accounts belong to the owner and use GitHub login.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | public config (RLS protects the data) | same as above | web |
 | `SUPABASE_SECRET_KEY` | **secret**, bypasses RLS | `web/.env.local` (local dev key); **Vercel: still to be added as Secret** for account deletion (#65) | web server only (`web/src/lib/supabase/admin.ts`), e2e tests |
 | `SONAR_TOKEN` | secret | GitHub repo secret (Actions) | CI `sonar` job |
+| `supabase-secret-key-<env>`, `supabase-db-url-<env>` | secrets | Google Secret Manager (values added by hand, `infra/README.md`) | worker (Cloud Run Job) |
+| `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `WORKER_IMAGE` | variables (not secret) | GitHub repo variables, from `terraform output` | `worker-deploy.yml` |
 | `SUPABASE_ACCESS_TOKEN` | secret | GitHub Environments `staging` and `production` | `db-deploy.yml` |
 | `SUPABASE_PROJECT_REF` | variable (not secret) | GitHub Environments `staging` / `production` | `db-deploy.yml` |
 | Database passwords | secrets | owner's password manager only | direct `psql` access. Not needed by CI or the CLI: they log in through the access token |

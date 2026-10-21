@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in. terraform.tfvars is gitignored.
+project_id         = "fitfinder-123456"
+billing_account_id = "012345-6789AB-CDEF01"
+# monthly_budget   = 10
+# Set to true after the first worker deploy (see README.md), then apply again
+schedules_enabled  = false
