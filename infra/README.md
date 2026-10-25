@@ -1,6 +1,6 @@
 # infra
 
-Terraform for Google Cloud: where the measurement worker runs (ADR 0011).
+Terraform for Google Cloud: where the measurement worker runs (ADR 0012).
 
 ```
 Cloud Scheduler ──► Cloud Run Job fitfinder-drain-<env> ──► Supabase (queue, photos, results)

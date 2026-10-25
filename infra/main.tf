@@ -1,4 +1,4 @@
-# Everything the worker needs in Google Cloud. ADR 0011 explains the choices.
+# Everything the worker needs in Google Cloud. ADR 0012 explains the choices.
 #
 #   Cloud Scheduler ──► Cloud Run Job (per environment) ──► Supabase
 #                         image from Artifact Registry, secrets from Secret Manager

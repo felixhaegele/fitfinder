@@ -22,7 +22,7 @@ All accounts belong to the owner and use GitHub login.
 | Supabase | Postgres, Auth, Storage, pgmq queue | org `ghmjttkdsvszvwzkunaj`; projects below |
 | Vercel (Hobby plan, non-commercial) | hosts `web/` | team `felixhaegeles-projects`, project `fitfinder-prod` |
 | SonarQube Cloud (free, public project) | code quality + coverage on every PR | org `felixhaegele`, project `felixhaegele_fitfinder` |
-| Google Cloud | worker on Cloud Run Jobs (ADR 0011) | project: see `infra/terraform.tfvars` / `gcloud config get project`; region `europe-west1`; Terraform in [`infra/`](../infra/) |
+| Google Cloud | worker on Cloud Run Jobs (ADR 0012) | project: see `infra/terraform.tfvars` / `gcloud config get project`; region `europe-west1`; Terraform in [`infra/`](../infra/) |
 
 ### Supabase projects
 

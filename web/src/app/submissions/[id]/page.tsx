@@ -16,6 +16,7 @@ import {
 import { getMySubmission } from "@/lib/submissions";
 
 import { AutoRefresh } from "./auto-refresh";
+import { DeleteSubmissionForm } from "./delete-submission-form";
 
 export const metadata: Metadata = { title: "Upload · FitFinder" };
 
@@ -119,6 +120,8 @@ async function SubmissionDetails({ params }: { params: PageProps<"/submissions/[
           missing="Created when your photo is measured."
         />
       </section>
+
+      <DeleteSubmissionForm submissionId={submission.id} />
     </>
   );
 }

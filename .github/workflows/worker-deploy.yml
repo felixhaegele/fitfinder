@@ -1,7 +1,7 @@
 name: Worker deploy
 
 # Builds the worker image, pushes it to Artifact Registry and points the Cloud Run Jobs
-# at it: staging first, production after the owner approves (ADR 0011).
+# at it: staging first, production after the owner approves (ADR 0012).
 #
 # Logs in to Google with Workload Identity Federation: GitHub's short-lived OIDC token
 # is exchanged for the deployer service account. There is no stored Google key. Google

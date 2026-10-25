@@ -19,6 +19,9 @@ How FitFinder protects user data, what it trusts and what it doesn't. Details of
 | `measurements`, `classifications` | – | read own (via the submission) | write |
 | Photos (`insoles` bucket, private) | – | upload, read, delete in **own folder** `<user_id>/`; can't overwrite | everything |
 | pgmq queue | – | – (schema not exposed) | read / archive |
+| Shoe fit summary (`shoe_fit_summaries()`, `shoe_fit_by_size()`) | read | read | read |
+
+The shoe fit summary (ADR 0011) is the one place where other people's results reach the public. It is not a table: two `security definer` functions aggregate done submissions and return **shoe-level columns only** (count, median mm, most common labels), never user ids, image paths, dates or outlines. The rows behind them keep the rules above. `95_shoe_fit_summary.test.sql` pins the output columns and grants.
 
 On top of RLS, **column grants** stop users from setting `status`, `user_id`, `created_by`, `processed_image_path` or timestamps at all, so a policy mistake alone doesn't open them up. pgTAP tests in `supabase/tests/database/` cover each rule for anonymous, user A, user B and the worker.
 
@@ -35,7 +38,7 @@ The browser re-encodes photos (EXIF orientation applied, all metadata dropped, m
 | Metadata (GPS) kept by skipping the browser step | Worker re-encodes on the server too and stores a separate cleaned copy (`processed_image_path`); the status page shows both copies |
 | Mass uploads (storage cost, queue flooding) | DB trigger: at most **20 submissions per user per 24 h** (error `P0429`) |
 | Photos without a submission (upload worked, saving failed) | Removed with account deletion; periodic cleanup still open |
-| Fake insoles poisoning crowd data | Not a v1 risk (nothing aggregated yet); outlier detection in v2 |
+| Fake insoles poisoning crowd data | Public summaries use medians, and only `done` submissions count, but with one or two uploads per shoe a fake one still decides the result. The page shows the count. Outlier detection in v2 |
 
 The full worker checklist is on #29.
 

@@ -1,4 +1,4 @@
-# 0011. Run the worker as Cloud Run Jobs, managed with Terraform, deployed via Workload Identity Federation
+# 0012. Run the worker as Cloud Run Jobs, managed with Terraform, deployed via Workload Identity Federation
 
 - **Status:** Accepted
 - **Date:** 2026-10-21
