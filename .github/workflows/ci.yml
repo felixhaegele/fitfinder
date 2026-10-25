@@ -27,6 +27,7 @@ jobs:
       worker: ${{ github.event_name == 'push' && 'true' || steps.filter.outputs.worker }}
       supabase: ${{ steps.filter.outputs.supabase }}
       print: ${{ steps.filter.outputs.print }}
+      infra: ${{ steps.filter.outputs.infra }}
     steps:
       - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
@@ -47,6 +48,9 @@ jobs:
             print:
               - 'print/**'
               - 'web/public/fitfinder-template-*.pdf' # the copy users download
+              - '.github/workflows/ci.yml'
+            infra:
+              - 'infra/**'
               - '.github/workflows/ci.yml'
 
   web:
@@ -282,6 +286,24 @@ jobs:
           path: worker/coverage-integration.xml
           retention-days: 7
 
+  # Terraform for Google Cloud (worker hosting, ADR 0012): formatting and a validity
+  # check without credentials. Applying stays a deliberate step by the owner.
+  infra:
+    needs: changes
+    if: needs.changes.outputs.infra == 'true'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.16.6 # keep in step with the version used locally
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+
   # Static analysis + coverage across both packages. Skips itself when the token
   # isn't available (e.g. Dependabot PRs, which don't get repo secrets).
   sonar:
@@ -334,7 +356,7 @@ jobs:
   # sometimes skipped, and a required check that's skipped never reports — so this
   # job always runs and fails only if something that did run failed.
   ci-ok:
-    needs: [changes, web, e2e, worker, worker-image, supabase, print]
+    needs: [changes, web, e2e, worker, worker-image, supabase, print, infra]
     if: always()
     runs-on: ubuntu-latest
     steps:
