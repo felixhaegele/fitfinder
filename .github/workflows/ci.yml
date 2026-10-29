@@ -143,7 +143,7 @@ jobs:
         working-directory: worker
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
+      - uses: astral-sh/setup-uv@v10.3.2 # no floating major tag published; Dependabot bumps this
         with:
           enable-cache: true
           cache-dependency-glob: worker/uv.lock
@@ -170,7 +170,7 @@ jobs:
         working-directory: print
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
+      - uses: astral-sh/setup-uv@v10.3.2 # no floating major tag published; Dependabot bumps this
         with:
           enable-cache: true
           cache-dependency-glob: print/uv.lock
@@ -262,7 +262,7 @@ jobs:
             echo "SUPABASE_SECRET_KEY=$(jq -r .SECRET_KEY /tmp/supabase.json)"
             echo "SUPABASE_DB_URL=$(jq -r .DB_URL /tmp/supabase.json)"
           } >> "$GITHUB_ENV"
-      - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
+      - uses: astral-sh/setup-uv@v10.3.2 # no floating major tag published; Dependabot bumps this
         with:
           enable-cache: true
           cache-dependency-glob: worker/uv.lock
