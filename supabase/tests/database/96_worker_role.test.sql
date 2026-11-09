@@ -51,6 +51,10 @@ select set_eq(
   'worker has exactly the expected grants'
 );
 
+-- pgTAP's functions live in `extensions`, which worker can't use. Only for this test,
+-- after the grant list above, and rolled back at the end.
+grant usage on schema extensions to worker;
+
 set local role worker;
 
 -- What store.py does

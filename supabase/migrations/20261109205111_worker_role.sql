@@ -26,6 +26,12 @@ begin
 end;
 $$;
 
+-- On Postgres 16+ the creator gets ADMIN on a new role but can't switch to it, and
+-- Supabase's postgres isn't a superuser. SET lets the pgTAP tests `set role worker`
+-- (#113); without INHERIT, postgres doesn't take on worker's rights, and it already has
+-- more than worker anyway.
+grant worker to postgres with inherit false, set true;
+
 -- ---------------------------------------------------------------------------
 -- Queue. pgmq's functions run with the caller's rights and are executable by everyone,
 -- so access is decided by the queue's tables: q_submissions holds the waiting messages,
