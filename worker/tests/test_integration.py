@@ -4,7 +4,12 @@ Runs only when the stack is up and these are set (values from `supabase status`)
 
     SUPABASE_URL=http://127.0.0.1:54321
     SUPABASE_SECRET_KEY=sb_secret_...
-    SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+    SUPABASE_DB_URL=postgresql://worker:worker@127.0.0.1:54322/postgres
+    SUPABASE_ADMIN_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+
+The worker code under test connects as the restricted `worker` role (#33; password from
+seed.sql), like it does on Cloud Run, so a missing grant fails here. The admin connection
+only sets up and cleans up: users, shoe models, the temporary queue.
 
 Otherwise (e.g. in CI's `worker` job, which has no database) the tests are skipped.
 CI runs them in the `supabase` job with REQUIRE_SUPABASE=1: there, an unreachable stack
@@ -38,14 +43,15 @@ from app.jobs.store import Finish, FinishOutcome, PostgresJobStore
 from app.pipeline import config as pipeline_config
 from tests.regression import TOLERANCE_MM, Fixture, load_fixture, render_fixture
 
-ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_DB_URL")
+ENV = ("SUPABASE_URL", "SUPABASE_SECRET_KEY", "SUPABASE_DB_URL", "SUPABASE_ADMIN_DB_URL")
 
 
 def _stack_available() -> bool:
     if not all(os.environ.get(name) for name in ENV):
         return False
     try:
-        psycopg.connect(os.environ["SUPABASE_DB_URL"], connect_timeout=2).close()
+        for name in ("SUPABASE_DB_URL", "SUPABASE_ADMIN_DB_URL"):
+            psycopg.connect(os.environ[name], connect_timeout=2).close()
     except psycopg.OperationalError:
         return False
     return True
@@ -114,11 +120,14 @@ class Stack:
 @pytest.fixture
 def stack() -> Iterator[Stack]:
     conn: Conn = psycopg.connect(
-        os.environ["SUPABASE_DB_URL"], autocommit=True, row_factory=dict_row
+        os.environ["SUPABASE_ADMIN_DB_URL"], autocommit=True, row_factory=dict_row
     )
     queue = f"submissions_test_{uuid.uuid4().hex[:12]}"
     user_id = uuid.uuid4()
     conn.execute("select pgmq.create(%s)", (queue,))
+    # The same rights the worker_role migration gives it on the real queue.
+    conn.execute(f"grant select, update, delete on pgmq.q_{queue} to worker")
+    conn.execute(f"grant insert, select (msg_id) on pgmq.a_{queue} to worker")
     conn.execute(
         "insert into auth.users (id, email) values (%s, %s)",
         (user_id, f"worker-test-{user_id}@example.com"),
@@ -130,10 +139,12 @@ def stack() -> Iterator[Stack]:
     ).fetchone()
     assert shoe is not None
     storage = SupabaseStorage(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SECRET_KEY"])
-    s = Stack(conn, PostgresJobStore(conn, queue), storage, user_id, shoe["id"], [])
+    store = PostgresJobStore.connect(os.environ["SUPABASE_DB_URL"], queue)
+    s = Stack(conn, store, storage, user_id, shoe["id"], [])
     try:
         yield s
     finally:
+        store.__exit__(None, None, None)
         for path in s.files:
             storage.delete(path)
         conn.execute("delete from auth.users where id = %s", (user_id,))  # cascades

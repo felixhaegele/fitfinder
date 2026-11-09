@@ -264,7 +264,10 @@ jobs:
             echo "SUPABASE_URL=$(jq -r .API_URL /tmp/supabase.json)"
             # Local dev key, not a real secret.
             echo "SUPABASE_SECRET_KEY=$(jq -r .SECRET_KEY /tmp/supabase.json)"
-            echo "SUPABASE_DB_URL=$(jq -r .DB_URL /tmp/supabase.json)"
+            # The worker connects as its restricted role (password from seed.sql); the
+            # tests' setup uses the admin URL.
+            echo "SUPABASE_ADMIN_DB_URL=$(jq -r .DB_URL /tmp/supabase.json)"
+            echo "SUPABASE_DB_URL=$(jq -r .DB_URL /tmp/supabase.json | sed 's|//postgres:postgres@|//worker:worker@|')"
           } >> "$GITHUB_ENV"
       - uses: astral-sh/setup-uv@v10.3.0 # no floating major tag published; Dependabot bumps this
         with:
