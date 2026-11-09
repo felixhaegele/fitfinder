@@ -15,3 +15,8 @@ insert into public.shoe_models (brand, model, year) values
   ('Fizik', 'Vento Infinito Carbon 2', 2020),
   ('Lake', 'CX241', 2018),
   ('Northwave', 'Extreme Pro 3', 2023);
+
+-- The worker's restricted role (migration worker_role, #33) gets a known password here,
+-- so local runs and CI's integration tests connect as `worker`, like Cloud Run does.
+-- Staging and prod get a real password from the owner instead (infra/README.md).
+alter role worker with login password 'worker';
