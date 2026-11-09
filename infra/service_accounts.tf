@@ -7,16 +7,19 @@ resource "google_service_account" "worker" {
   for_each     = var.environments
   account_id   = "worker-${each.key}"
   display_name = "FitFinder worker (${each.key})"
+  depends_on   = [google_project_service.apis] # IAM must be enabled first
 }
 
 resource "google_service_account" "scheduler" {
   account_id   = "scheduler"
   display_name = "Starts the FitFinder worker jobs"
+  depends_on   = [google_project_service.apis] # IAM must be enabled first
 }
 
 resource "google_service_account" "deployer" {
   account_id   = "github-deployer"
   display_name = "GitHub Actions: deploys the worker"
+  depends_on   = [google_project_service.apis] # IAM must be enabled first
 }
 
 # Scheduler → start jobs
