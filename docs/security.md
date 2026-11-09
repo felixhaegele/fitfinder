@@ -6,7 +6,7 @@ How FitFinder protects user data, what it trusts and what it doesn't. Details of
 
 1. **The browser talks to Postgres directly** (ADR 0002), so **Row-Level Security is the access control**. Every table has RLS with explicit policies; `supabase/tests/database/00_rls_enabled.test.sql` fails CI if any table in `public` doesn't.
 2. **Never trust the client.** Anything the browser does (validation, photo re-encoding) is a convenience. The rules are enforced again in the database, in server actions or in the worker.
-3. **Least privilege.** Users get the narrowest grants that work; only server-side code holds the secret key; only the worker writes results.
+3. **Least privilege.** Users get the narrowest grants that work; only server-side code holds the secret key; only the worker writes results. The worker's database connection uses its own `worker` role (#33): read jobs from the `submissions` queue, read four submission columns, set status and results, insert measurements and classifications, nothing else (`supabase/tests/database/96_worker_role.test.sql`).
 4. **Privacy by default:** EU hosting, private photos, explicit consent, real deletion.
 
 ## Who can do what

@@ -72,7 +72,15 @@ Per environment, two secrets. `read -rs` asks without showing the value and keep
 | Secret | Value | Where to get it |
 |---|---|---|
 | `supabase-secret-key-<env>` | `sb_secret_…` | Supabase → project → Project Settings → API Keys → Secret keys |
-| `supabase-db-url-<env>` | `postgresql://postgres.<project-id>:<password>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres` | Supabase → project → **Connect** → **Session pooler** (Cloud Run has no IPv6, so not the direct connection). Put in the database password; **URL-encode special characters** in it (e.g. `@` → `%40`) |
+| `supabase-db-url-<env>` | `postgresql://worker.<project-id>:<worker password>@aws-0-eu-west-1.pooler.supabase.com:5432/postgres` | Supabase → project → **Connect** → **Session pooler** (Cloud Run has no IPv6, so not the direct connection). Copy that URL, replace the user `postgres.<project-id>` with `worker.<project-id>` and put in the worker's password from below; **URL-encode special characters** in it (e.g. `@` → `%40`) |
+
+**The worker's database password.** The worker logs in as its own restricted role `worker` (migration `worker_role`, #33), not as `postgres`: it can only read jobs and write results. The migration creates the role without a password, so set one per environment, once, after the migration has been applied. Generate it with `openssl rand -hex 24` (hex: nothing to URL-encode), then in Supabase → project → **SQL Editor**:
+
+```sql
+alter role worker with login password '<generated password>';
+```
+
+The SQL editor keeps a query history: delete that query from it afterwards. The password only goes into the secret above, nowhere else.
 
 ```sh
 for name in supabase-secret-key-staging supabase-db-url-staging \

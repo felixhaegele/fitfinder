@@ -30,6 +30,7 @@ We will run the worker on **Google Cloud Run Jobs** in **`europe-west1`** (Belgi
 ## Consequences
 
 - Google Cloud is the third provider, with its own account, billing and console. Setup is a documented one-off (`infra/README.md`).
-- The worker connects to Postgres through Supabase's **session pooler** (Cloud Run has no IPv6), so its database URL contains the database password. It lives only in Secret Manager; resetting the password means adding a new secret version.
+- The worker connects to Postgres through Supabase's **session pooler** (Cloud Run has no IPv6), so its database URL contains a password. It lives only in Secret Manager; resetting the password means adding a new secret version.
+- That URL is for the restricted `worker` role, not `postgres` (migration `worker_role`). If the secret leaks, the holder can read and finish jobs and write results, but can't read users, profiles or photos' metadata, or delete anything. `supabase/tests/database/96_worker_role.test.sql` pins its exact grants. Photos are still fetched with the secret key, which stays a powerful secret.
 - Schedules start paused (`schedules_enabled = false`) until the first image is deployed, because the jobs are created with a placeholder image.
 - Users wait up to ~1 minute (prod). Making it faster is #42.
