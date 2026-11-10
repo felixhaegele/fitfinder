@@ -69,3 +69,73 @@ export function fitLabelRows(summary: Partial<Record<FitColumn, string | null>>)
 export function insoleCount(n: number): string {
   return n === 1 ? "1 insole measured" : `${n} insoles measured`;
 }
+
+/** The filters as a query string for a link ("" or "?q=…&width=…"), the reverse of parseShoeFilters. */
+export function shoeFiltersQuery(filters: ShoeFilters): string {
+  const params = new URLSearchParams();
+  if (filters.q) {
+    params.set("q", filters.q);
+  }
+  for (const { param, column } of FIT_FILTERS) {
+    const value = filters.classes[column];
+    if (value) {
+      params.set(param, value);
+    }
+  }
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+/** The columns of a shoe_fit_summaries row the CSV uses. Labels are null until classified. */
+export type ShoeSummaryRow = {
+  brand: string;
+  model: string;
+  year: number;
+  submission_count: number;
+  median_length_mm: number | null;
+  median_ball_width_mm: number | null;
+  median_heel_width_mm: number | null;
+  median_arch_width_mm: number | null;
+} & Partial<Record<FitColumn, string | null>>;
+
+type CsvValue = string | number | null | undefined;
+
+const CSV_COLUMNS: { header: string; value: (row: ShoeSummaryRow) => CsvValue }[] = [
+  { header: "Brand", value: (row) => row.brand },
+  { header: "Model", value: (row) => row.model },
+  { header: "Year", value: (row) => row.year },
+  { header: "Insoles measured", value: (row) => row.submission_count },
+  { header: "Median length (mm)", value: (row) => row.median_length_mm },
+  { header: "Median ball width (mm)", value: (row) => row.median_ball_width_mm },
+  { header: "Median heel width (mm)", value: (row) => row.median_heel_width_mm },
+  { header: "Median arch width (mm)", value: (row) => row.median_arch_width_mm },
+  // Readable labels, like on the page; an empty cell (not "–") when not classified yet.
+  ...FIT_FILTERS.map(({ column }) => ({
+    header: CLASS_LABELS[column].label,
+    value: (row: ShoeSummaryRow) => (row[column] == null ? null : fitLabel(column, row[column])),
+  })),
+];
+
+/**
+ * One CSV cell (RFC 4180). Brand and model are typed in by users, so text a spreadsheet
+ * would run as a formula (starting with =, +, -, @, tab or CR) gets a leading apostrophe.
+ */
+function csvCell(value: CsvValue): string {
+  if (value == null) {
+    return "";
+  }
+  let text = String(value);
+  if (typeof value === "string" && /^[=+\-@\t\r]/.test(text)) {
+    text = `'${text}`;
+  }
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
+/** The shoe list as CSV: a header row, then one row per shoe, CRLF line endings. */
+export function shoesToCsv(rows: ShoeSummaryRow[]): string {
+  const lines = [CSV_COLUMNS.map((column) => csvCell(column.header))];
+  for (const row of rows) {
+    lines.push(CSV_COLUMNS.map((column) => csvCell(column.value(row))));
+  }
+  return lines.map((cells) => cells.join(",")).join("\r\n") + "\r\n";
+}

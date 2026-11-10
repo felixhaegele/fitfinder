@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { FIT_FILTERS, fitLabelRows, hasActiveFilters, insoleCount, MAX_SEARCH_LENGTH, parseShoeFilters, type ShoeFilters } from "@/lib/shoe-fit";
+import { FIT_FILTERS, fitLabelRows, hasActiveFilters, insoleCount, MAX_SEARCH_LENGTH, parseShoeFilters, shoeFiltersQuery, type ShoeFilters } from "@/lib/shoe-fit";
 import { listShoes } from "@/lib/shoes";
 import { CLASS_LABELS, formatMm, TOE_LABELS_NOTE } from "@/lib/submission-status";
 
@@ -64,7 +64,13 @@ async function ShoeSearch({ searchParams }: { searchParams: PageProps<"/shoes">[
               </li>
             ))}
           </ul>
-          <p className="text-xs text-zinc-500">{TOE_LABELS_NOTE}</p>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+            <p className="text-xs text-zinc-500">{TOE_LABELS_NOTE}</p>
+            {/* A plain link, so the browser downloads it; prefetching a file makes no sense. */}
+            <a href={`/shoes/download${shoeFiltersQuery(filters)}`} className="text-sm font-medium underline">
+              Download CSV
+            </a>
+          </div>
         </section>
       )}
     </>

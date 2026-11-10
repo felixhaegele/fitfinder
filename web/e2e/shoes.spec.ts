@@ -116,11 +116,24 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   await expect(page).toHaveURL(/width=wide/);
   await expect(page.getByRole("link", { name: new RegExp(model) })).toHaveCount(1);
 
+  // The CSV download keeps the filters and contains the same shoe, as a file.
+  const download = page.getByRole("link", { name: "Download CSV" });
+  await expect(download).toHaveAttribute("href", /^\/shoes\/download\?q=.+&width=wide&toe_shape=egyptian$/);
+  const csv = await request.get(String(await download.getAttribute("href")));
+  expect(csv.ok()).toBe(true);
+  expect(csv.headers()["content-type"]).toBe("text/csv; charset=utf-8");
+  expect(csv.headers()["content-disposition"]).toMatch(/^attachment; filename="fitfinder-shoes-\d{4}-\d{2}-\d{2}\.csv"$/);
+  const lines = (await csv.text()).split("\r\n");
+  expect(lines[0]).toMatch(/^﻿Brand,Model,Year,Insoles measured,/);
+  expect(lines).toContain(`Testbrand,${model},2024,1,272.46,98.2,62.1,74,Wide,Medium,Round,Egyptian (big toe longest)`);
+  expect(lines).toHaveLength(3); // header, the one shoe, trailing line break
+
   await page.getByLabel("Width").selectOption({ label: "Narrow" });
   await page.getByRole("button", { name: "Search" }).click();
   await expect(page).toHaveURL(/width=narrow/);
   await expect(page.getByText("No measured shoes match your search.")).toBeVisible();
   await expect(page.getByRole("link", { name: new RegExp(model) })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Download CSV" })).toHaveCount(0);
 
   // The detail page shows the summary and the per-size row.
   await page.goto(`/shoes/${shoeId}`);

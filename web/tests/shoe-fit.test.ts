@@ -7,6 +7,8 @@ import {
   insoleCount,
   MAX_SEARCH_LENGTH,
   parseShoeFilters,
+  shoeFiltersQuery,
+  shoesToCsv,
 } from "@/lib/shoe-fit";
 
 describe("parseShoeFilters", () => {
@@ -96,5 +98,66 @@ describe("insoleCount", () => {
   it("uses singular and plural", () => {
     expect(insoleCount(1)).toBe("1 insole measured");
     expect(insoleCount(3)).toBe("3 insoles measured");
+  });
+});
+
+describe("shoeFiltersQuery", () => {
+  it("is empty without filters", () => {
+    expect(shoeFiltersQuery({ q: "", classes: {} })).toBe("");
+  });
+
+  it("round-trips through parseShoeFilters", () => {
+    const filters = parseShoeFilters({ q: "shimano rc7 & co", width: "wide", toe_shape: "greek" });
+    const query = shoeFiltersQuery(filters);
+    expect(query).toBe("?q=shimano+rc7+%26+co&width=wide&toe_shape=greek");
+    expect(parseShoeFilters(Object.fromEntries(new URLSearchParams(query)))).toEqual(filters);
+  });
+});
+
+describe("shoesToCsv", () => {
+  const shoe = {
+    brand: "Shimano",
+    model: "RC7",
+    year: 2023,
+    submission_count: 2,
+    median_length_mm: 272.46,
+    median_ball_width_mm: 98.2,
+    median_heel_width_mm: 62.1,
+    median_arch_width_mm: 74,
+    width_class: "wide",
+    arch_class: "medium",
+    toe_box_shape: "round",
+    toe_shape: "egyptian",
+  };
+
+  it("writes a header row and one row per shoe with readable labels", () => {
+    expect(shoesToCsv([shoe]).split("\r\n")).toEqual([
+      "Brand,Model,Year,Insoles measured,Median length (mm),Median ball width (mm)," +
+        "Median heel width (mm),Median arch width (mm),Width,Arch,Toe box,Toe shape",
+      "Shimano,RC7,2023,2,272.46,98.2,62.1,74,Wide,Medium,Round,Egyptian (big toe longest)",
+      "",
+    ]);
+  });
+
+  it("writes only the header for no shoes", () => {
+    expect(shoesToCsv([]).split("\r\n")).toHaveLength(2);
+  });
+
+  it("leaves cells empty for a shoe that isn't classified yet", () => {
+    const row = shoesToCsv([{ ...shoe, width_class: null, arch_class: null, toe_box_shape: null, toe_shape: null }]);
+    expect(row.split("\r\n")[1]).toBe("Shimano,RC7,2023,2,272.46,98.2,62.1,74,,,,");
+  });
+
+  it("quotes commas, quotes and line breaks", () => {
+    const row = shoesToCsv([{ ...shoe, brand: 'Giro "Pro", Inc.', model: "Line\nbreak" }]).split("\r\n").slice(1).join("\r\n");
+    expect(row.startsWith('"Giro ""Pro"", Inc.","Line\nbreak",2023')).toBe(true);
+  });
+
+  it("defuses text a spreadsheet would run as a formula", () => {
+    for (const evil of ["=HYPERLINK(\"x\")", "+1", "-1", "@SUM(A1)", "\tx"]) {
+      const cells = shoesToCsv([{ ...shoe, model: evil }]).split("\r\n")[1];
+      expect(cells).not.toMatch(/^Shimano,[=+\-@\t]/);
+      expect(cells).toContain(`'${evil.replaceAll('"', '""')}`);
+    }
   });
 });
