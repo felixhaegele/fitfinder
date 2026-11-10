@@ -123,7 +123,11 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   expect(csv.ok()).toBe(true);
   expect(csv.headers()["content-type"]).toBe("text/csv; charset=utf-8");
   expect(csv.headers()["content-disposition"]).toMatch(/^attachment; filename="fitfinder-shoes-\d{4}-\d{2}-\d{2}\.csv"$/);
-  const lines = (await csv.text()).split("\r\n");
+  const text = await csv.text();
+  for (const personal of [user.email, user.id, done.imagePath, rejected.imagePath, done.id, rejected.id]) {
+    expect(text).not.toContain(personal);
+  }
+  const lines = text.split("\r\n");
   expect(lines[0]).toMatch(/^﻿Brand,Model,Year,Insoles measured,/);
   expect(lines).toContain(`Testbrand,${model},2024,1,272.46,98.2,62.1,74,Wide,Medium,Round,Egyptian (big toe longest)`);
   expect(lines).toHaveLength(3); // header, the one shoe, trailing line break
