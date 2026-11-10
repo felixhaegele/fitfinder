@@ -4,6 +4,7 @@ Smaller decisions that shaped the code but don't need a full ADR. Bigger ones ar
 
 | Date | Decision | Why | Where |
 |---|---|---|---|
+| 2026-11-10 | Prod worker runs every 5 min instead of every minute (supersedes the "~1 min" in ADR 0003 / 0012 and the rows below) | Empty runs take 5–15 s on Cloud Run, not "a few seconds"; ~43k runs/month likely leaves the free tier. Users now wait up to ~5 min; real-time wake-up is #42 | `infra/variables.tf`, #42 |
 | 2026-10-19 | Magic links verify a token hash on `/auth/confirm` (works on any device); `/auth/confirm` also accepts PKCE codes | People request the link on a laptop and open it on their phone. Accepting both keeps login working while hosted templates are updated | `supabase/templates/`, #46 |
 | 2026-10-19 | CI logs in to hosted databases through the access token (temporary login role), not a database password | A wrong password secret broke prod deploys while local tests passed; one secret less | `.github/workflows/db-deploy.yml`, #89 |
 | 2026-10-18 | One Vercel project (`fitfinder-prod`): previews use staging Supabase, production uses prod | One build per push, private previews; a second project doubled builds and exposed a public staging site | #32, `docs/environments.md` |

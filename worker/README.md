@@ -38,7 +38,7 @@ The glue between Supabase and the pipeline (#29, ADR 0003, ADR 0010). Run it wit
 uv run python -m app.jobs.drain
 ```
 
-It reads one message at a time from the pgmq queue `submissions`, handles it, and exits when the queue is empty. In production, Cloud Scheduler starts it as a **Cloud Run Job** about once a minute (#33).
+It reads one message at a time from the pgmq queue `submissions`, handles it, and exits when the queue is empty. In production, Cloud Scheduler starts it as a **Cloud Run Job** every 5 minutes (#33).
 
 For each message:
 

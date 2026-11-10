@@ -11,7 +11,7 @@ export const STATUS_COPY: Record<
 > = {
   queued: {
     label: "Waiting",
-    description: "Waiting to be measured. This usually takes a minute or two.",
+    description: "Waiting to be measured. This usually takes a few minutes.",
     tone: "neutral",
   },
   processing: { label: "Measuring", description: "Measuring your insole…", tone: "busy" },
