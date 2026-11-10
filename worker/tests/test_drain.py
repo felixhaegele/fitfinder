@@ -1,21 +1,78 @@
 """The Cloud Run Job loop: drain the queue, then stop."""
 
+import logging
 import subprocess
 import sys
 from collections.abc import Iterator
+from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
 
-from app.jobs.drain import Settings, drain
+from app.jobs import drain as drain_module
+from app.jobs import storage as storage_module
+from app.jobs.drain import Settings, drain, main
 from app.jobs.handler import Outcome
-from app.jobs.sandbox import Processed
-from app.jobs.store import Message
+from app.jobs.sandbox import Processed, Rejected
+from app.jobs.store import Message, PostgresJobStore
 from tests.jobs_fakes import FakeStorage, FakeStore, done, rejected
 
 
 def runner_for(*results: Processed) -> Iterator[Processed]:
     yield from results
+
+
+@pytest.fixture
+def entrypoint(monkeypatch: pytest.MonkeyPatch) -> tuple[FakeStore, list[FakeStorage]]:
+    """main() wired to fakes: no database, no Supabase, no child process."""
+    monkeypatch.setenv("SUPABASE_URL", "http://127.0.0.1:54321")
+    monkeypatch.setenv("SUPABASE_SECRET_KEY", "sb_secret_x")
+    monkeypatch.setenv("SUPABASE_DB_URL", "postgresql://localhost/db")
+    monkeypatch.delenv("SENTRY_DSN", raising=False)
+    store, storages = FakeStore(), []
+
+    def storage_client(url: str, key: str) -> nullcontext[FakeStorage]:
+        storages.append(FakeStorage())
+        return nullcontext(storages[-1])
+
+    monkeypatch.setattr(PostgresJobStore, "connect", lambda url: nullcontext(store))
+    monkeypatch.setattr(storage_module, "SupabaseStorage", storage_client)
+    monkeypatch.setattr(drain_module, "sandboxed_runner", lambda: lambda data: done())
+    return store, storages
+
+
+def test_main_exits_on_an_empty_queue_without_the_storage_client(
+    entrypoint: tuple[FakeStore, list[FakeStorage]], caplog: pytest.LogCaptureFixture
+) -> None:
+    _, storages = entrypoint
+    caplog.set_level(logging.INFO, logger="app.jobs.drain")
+
+    assert main() == 0
+    assert storages == []
+    assert caplog.messages == ["finished: queue empty"]
+
+
+def test_main_handles_queued_work(
+    entrypoint: tuple[FakeStore, list[FakeStorage]],
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    store, storages = entrypoint
+    sid = store.add()
+    store.queue.append(Message(7, 1, {"submission_id": str(sid)}))
+    files = {store.rows[sid].image_path: b"photo"}
+
+    def storage_with_photo(url: str, key: str) -> nullcontext[FakeStorage]:
+        storages.append(FakeStorage())
+        storages[-1].files.update(files)
+        return nullcontext(storages[-1])
+
+    monkeypatch.setattr(storage_module, "SupabaseStorage", storage_with_photo)
+    caplog.set_level(logging.INFO, logger="app.jobs.drain")
+
+    assert main() == 0
+    assert store.archived == [7]
+    assert caplog.messages[-1].startswith("finished: done=1, rejected=0")
 
 
 def test_drains_until_the_queue_is_empty() -> None:
@@ -49,6 +106,13 @@ def test_handles_the_message_main_already_read_first() -> None:
 
     assert counts == {Outcome.DONE: 2}
     assert store.archived == [0, 1]
+
+
+def test_sandboxed_runner_rejects_bytes_that_are_no_image() -> None:
+    processed = drain_module.sandboxed_runner(timeout_s=30)(b"not a photo")
+
+    assert processed.clean_jpeg is None
+    assert isinstance(processed.outcome, Rejected)
 
 
 def test_importing_the_entrypoint_leaves_the_pipeline_unloaded() -> None:
