@@ -5,7 +5,7 @@
 
 ## Context
 
-Besides browsing by fit type (`/shoes`), visitors should be able to enter their own foot length and width and get a list of shoes that fit ("Find by model", `/shoes/for-my-feet`). A shoe needs some room in front of the toes, so the owner asked for a "wiggle room" field, 7 mm by default, that is added to the foot length.
+Besides browsing by model and fit labels ("Find by model", `/shoes`), visitors should be able to enter their own foot length and width and get a list of shoes that fit ("Find by size", `/shoes/for-my-feet`). A shoe needs some room in front of the toes, so the owner asked for a "wiggle room" field, 7 mm by default, that is added to the foot length.
 
 Length only means something per size: a shoe's median over all its sizes (`shoe_fit_summaries`) says nothing about any one size. The per-size numbers exist (`shoe_fit_by_size`), but only for one shoe at a time.
 

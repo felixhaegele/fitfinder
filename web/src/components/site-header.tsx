@@ -15,10 +15,10 @@ export function SiteHeader() {
           </Link>
           {/* Public, so outside the Suspense below: visible whether or not you're logged in. */}
           <Link href="/shoes" className="text-sm font-medium">
-            Find by type
+            Find by model
           </Link>
           <Link href="/shoes/for-my-feet" className="text-sm font-medium">
-            Find by model
+            Find by size
           </Link>
         </nav>
         {/* The rest of the page is static; only this part waits for the session. */}

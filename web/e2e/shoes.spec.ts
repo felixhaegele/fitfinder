@@ -92,7 +92,7 @@ test("measured shoes are listed, searchable and filterable without logging in", 
 
   // A visitor who isn't logged in (this page has no session) finds it from the header.
   await page.goto("/");
-  await page.getByRole("link", { name: "Find by type" }).click();
+  await page.getByRole("link", { name: "Find by model" }).click();
   await expect(page.getByRole("heading", { name: "Shoes by fit" })).toBeVisible();
 
   await page.getByRole("searchbox", { name: "Brand or model" }).fill(`testbrand ${model}`);
@@ -163,7 +163,7 @@ test("unknown filter values are ignored instead of failing", async ({ page }) =>
   await expect(page.getByLabel("Width")).toHaveValue("");
 });
 
-test("find by model lists shoes whose insole fits a foot plus wiggle room", async ({
+test("find by size lists shoes whose insole fits a foot plus wiggle room", async ({
   page,
   request,
 }) => {
@@ -184,7 +184,7 @@ test("find by model lists shoes whose insole fits a foot plus wiggle room", asyn
   });
 
   await page.goto("/");
-  await page.getByRole("link", { name: "Find by model" }).click();
+  await page.getByRole("link", { name: "Find by size" }).click();
   await expect(page.getByRole("heading", { level: 1, name: "Shoes for your feet" })).toBeVisible();
   await expect(page.getByLabel("Wiggle room (mm)")).toHaveValue("7");
 
@@ -206,7 +206,7 @@ test("find by model lists shoes whose insole fits a foot plus wiggle room", asyn
   await expect(page.getByRole("link", { name: new RegExp(model) })).toHaveCount(0);
 });
 
-test("find by model explains an invalid foot size", async ({ page }) => {
+test("find by size explains an invalid foot size", async ({ page }) => {
   await page.goto("/shoes/for-my-feet?length=26&width=98");
   // Scoped to main: Next.js's route announcer is an alert too.
   await expect(page.getByRole("main").getByRole("alert")).toHaveText(/foot length in mm, between 150 and 350/);

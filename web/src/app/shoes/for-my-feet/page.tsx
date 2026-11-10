@@ -8,7 +8,7 @@ import { listShoeSizes } from "@/lib/shoes";
 import { SIZE_SYSTEMS, type SizeSystem } from "@/lib/submission-form";
 import { formatMm } from "@/lib/submission-status";
 
-export const metadata: Metadata = { title: "Find by model · FitFinder" };
+export const metadata: Metadata = { title: "Find by size · FitFinder" };
 
 export default function FindByModelPage({ searchParams }: PageProps<"/shoes/for-my-feet">) {
   return (
@@ -95,7 +95,7 @@ async function Matches({ foot }: { foot: Foot }) {
         No measured size has an insole of about {formatMm(needed)} that is at least{" "}
         {formatMm(foot.widthMm)} wide. Try less wiggle room, or{" "}
         <Link href="/shoes" className="font-medium underline">
-          browse by type
+          browse by model
         </Link>
         .
       </p>

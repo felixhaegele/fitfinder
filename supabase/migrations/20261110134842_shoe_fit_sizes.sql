@@ -1,4 +1,4 @@
--- Per-size fit of every shoe, for "find by model" (ADR 0014).
+-- Per-size fit of every shoe, for "find by size" (ADR 0014).
 --
 -- The page matches a foot (length + wiggle room, width) against insoles, which only works
 -- per size: a shoe's median over all sizes says nothing about one size. shoe_fit_by_size
