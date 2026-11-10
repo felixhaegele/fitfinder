@@ -10,8 +10,10 @@ The approach and its alternatives are in ADR 0005. In short:
    everywhere, so a single threshold works across the whole page.
 4. Threshold halfway between the paper and insole levels, clean up specks, keep the
    biggest blob, fill its holes (logos, perforations), and take its outline.
-5. Too blurry? Estimate how wide the insole's edge is smeared, in mm.
-6. Touches the edge? Check whether the blob runs into the border of the search region,
+5. Shadow? Look for a stretch of outline that is much softer than the rest: the border
+   of a cast shadow that merged with the insole.
+6. Too blurry? Estimate how wide the insole's edge is smeared, in mm.
+7. Touches the edge? Check whether the blob runs into the border of the search region,
    i.e. it was cut off by the guides, the paper edge or the photo's edge.
 
 Everything here is a pure function on arrays: no files, no network, no database.
@@ -88,6 +90,28 @@ def paper_background(gray: GrayImage, px_per_mm: float, window_mm: float) -> F32
     return np.asarray(cv2.resize(smooth, (w, h), interpolation=cv2.INTER_LINEAR), np.float32)
 
 
+_PRE_SIGMA_PX = 1.0  # light smoothing so pixel noise doesn't fake steep slopes
+
+
+def _edge_slopes(flat: F32Image, contour_px: FloatArray) -> FloatArray:
+    """The steepest brightness change at each outline point, per pixel."""
+    smooth = cv2.GaussianBlur(flat, (0, 0), _PRE_SIGMA_PX)
+    gx = cv2.Sobel(smooth, cv2.CV_32F, 1, 0, ksize=3, scale=1 / 8)
+    gy = cv2.Sobel(smooth, cv2.CV_32F, 0, 1, ksize=3, scale=1 / 8)
+    # The outline sits on the edge's middle, give or take a pixel: take the local max.
+    slope = cv2.dilate(cv2.magnitude(gx, gy), _kernel(5))
+    pts = np.round(contour_px).astype(int)
+    return np.asarray(slope[pts[:, 1], pts[:, 0]], np.float64)
+
+
+def _blur_from_slope(slope: FloatArray, contrast: float) -> FloatArray:
+    with np.errstate(divide="ignore"):
+        total = contrast / (slope * math.sqrt(2 * math.pi))
+    total = np.where(slope > 0, total, math.inf)
+    # Blurs add in quadrature; take back out the smoothing we added ourselves.
+    return np.asarray(np.sqrt(np.maximum(total**2 - _PRE_SIGMA_PX**2, 0.0)), np.float64)
+
+
 def edge_blur_px(flat: F32Image, contour_px: FloatArray, contrast: float) -> float:
     """Gaussian sigma (px) of the insole's edge, from its steepest brightness change.
 
@@ -96,19 +120,52 @@ def edge_blur_px(flat: F32Image, contour_px: FloatArray, contrast: float) -> flo
     the whole outline: robust to a few noisy or shadowed spots, and independent of how
     bright the photo is (the flattened image has contrast C in its own units).
     """
-    pre_sigma = 1.0  # light smoothing so pixel noise doesn't fake steep slopes
-    smooth = cv2.GaussianBlur(flat, (0, 0), pre_sigma)
-    gx = cv2.Sobel(smooth, cv2.CV_32F, 1, 0, ksize=3, scale=1 / 8)
-    gy = cv2.Sobel(smooth, cv2.CV_32F, 0, 1, ksize=3, scale=1 / 8)
-    # The outline sits on the edge's middle, give or take a pixel: take the local max.
-    slope = cv2.dilate(cv2.magnitude(gx, gy), _kernel(5))
+    median_slope = np.median(_edge_slopes(flat, contour_px))
+    return float(_blur_from_slope(np.array([median_slope]), contrast)[0])
+
+
+@dataclass(frozen=True)
+class EdgeProfile:
+    # Outline points on a stretch of edge blurred more than the limit.
+    soft_px: int
+    # Blur (px) that a quarter of the judged outline is sharper than: the insole's own
+    # edge, even when a shadow makes up much of the rest.
+    sharp_px: float
+
+
+def edge_profile(
+    flat: F32Image,
+    contour_px: FloatArray,
+    contrast: float,
+    ignore: npt.NDArray[np.bool_],
+    window_px: int,
+    max_blur_px: float,
+) -> EdgeProfile:
+    """Find stretches of the outline blurred more than `max_blur_px`.
+
+    A cast shadow that merges with the insole puts the outline on the shadow's border,
+    which is soft (a penumbra, several mm), while the insole's own edge is sharp. Unlike
+    `edge_blur_px`, this looks at the edge point by point: a shadow covers only part of
+    the outline, so the median hides it. Each point's blur is the median over a run of
+    `window_px` points, so one noisy spot doesn't count. Points where `ignore` is set
+    (the search region's rim, where the outline was cut off) are skipped.
+    """
+    blur = _blur_from_slope(_edge_slopes(flat, contour_px), contrast)
+    half = window_px // 2
+    if len(blur) <= window_px:
+        runs = np.full(len(blur), np.median(blur))
+    else:
+        wrapped = np.concatenate([blur[-half:], blur, blur[:half]])
+        windows = np.lib.stride_tricks.sliding_window_view(wrapped, 2 * half + 1)
+        runs = np.median(windows, axis=1)
     pts = np.round(contour_px).astype(int)
-    median_slope = float(np.median(slope[pts[:, 1], pts[:, 0]]))
-    if median_slope <= 0:
-        return math.inf
-    total = contrast / (median_slope * math.sqrt(2 * math.pi))
-    # Blurs add in quadrature; take back out the smoothing we added ourselves.
-    return math.sqrt(max(total**2 - pre_sigma**2, 0.0))
+    judged = runs[~ignore[pts[:, 1], pts[:, 0]]]
+    if len(judged) == 0:
+        return EdgeProfile(soft_px=0, sharp_px=math.inf)
+    return EdgeProfile(
+        soft_px=int(np.count_nonzero(judged > max_blur_px)),
+        sharp_px=float(np.percentile(judged, 25)),
+    )
 
 
 def segment(
@@ -118,8 +175,8 @@ def segment(
     px_per_mm: float = config.PX_PER_MM,
 ) -> Segmentation:
     """Find the insole in a flattened page image. Raises Rejection when the photo can't
-    be measured: TOO_DARK, INSOLE_NOT_FOUND, TOO_BLURRY or INSOLE_TOUCHES_EDGE (checked in
-    that order, so the user gets the reason that blocks everything after it)."""
+    be measured: TOO_DARK, INSOLE_NOT_FOUND, SHADOW, TOO_BLURRY or INSOLE_TOUCHES_EDGE
+    (checked in that order, so the user gets the reason that blocks everything after it)."""
     gray = to_gray(page)
     region = search_region(valid, zone_mm, px_per_mm, config.ZONE_MARGIN_MM)
     inside = region > 0
@@ -173,6 +230,31 @@ def segment(
             f"largest dark region {area_mm2:.0f} mm^2 < {config.MIN_INSOLE_AREA_MM2:.0f}",
         )
     contour_px = largest.reshape(-1, 2).astype(np.float64)
+
+    # A shadow along one side can cover half the outline and push the median blur over
+    # the limit, so it's checked first, but only while the rest of the edge is in focus:
+    # a photo blurred all over is TOO_BLURRY. It also comes before the edge check: a
+    # shadow often reaches the guides too, and then it, not the insole's position, is what
+    # the user must fix. The outline near the region's border is left out, because where
+    # the region cuts the insole off there is no edge at all.
+    near_border = np.asarray(cv2.erode(region, _kernel(7), borderValue=0), np.uint8) == 0
+    profile = edge_profile(
+        flat,
+        contour_px,
+        paper_level - insole_level,
+        near_border,
+        round(config.SHADOW_RUN_MM * px_per_mm),
+        config.SHADOW_EDGE_BLUR_MM * px_per_mm,
+    )
+    soft_mm = profile.soft_px / px_per_mm
+    if (
+        soft_mm >= config.SHADOW_MIN_LENGTH_MM
+        and profile.sharp_px / px_per_mm <= config.MAX_EDGE_BLUR_MM
+    ):
+        raise Rejection(
+            RejectionCode.SHADOW,
+            f"{soft_mm:.1f} mm of the outline blurred > {config.SHADOW_EDGE_BLUR_MM} mm",
+        )
 
     blur_mm = edge_blur_px(flat, contour_px, paper_level - insole_level) / px_per_mm
     if blur_mm > config.MAX_EDGE_BLUR_MM:

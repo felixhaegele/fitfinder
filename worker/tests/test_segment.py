@@ -6,7 +6,13 @@ import pytest
 
 from app.pipeline import config
 from app.pipeline.rejections import Rejection, RejectionCode
-from app.pipeline.segment import Segmentation, edge_blur_px, segment, segment_insole
+from app.pipeline.segment import (
+    Segmentation,
+    edge_blur_px,
+    edge_profile,
+    segment,
+    segment_insole,
+)
 from app.pipeline.template import Template, load_template
 from app.pipeline.warp import warp_to_page
 from tests.insoles import measure_in_frame
@@ -180,6 +186,49 @@ def test_blurred_photo_is_too_blurry(template: Template) -> None:
     page = _draw_ellipse(_page(template), template)
     page = cv2.GaussianBlur(page, (0, 0), 0.8 * PPM)
     assert _code(template, page) == RejectionCode.TOO_BLURRY
+
+
+def _cast_shadow(page: np.ndarray, template: Template, penumbra_mm: float) -> np.ndarray:
+    """A lamp low on one side: the insole's shadow lies 6 mm beside it, as dark as a dark
+    insole, with a soft border. Drawn under the insole, then the insole on top."""
+    shadow = np.zeros(page.shape, np.float32)
+    _draw_ellipse(shadow, template, tone=1, offset_mm=(-4.9, -3.5))  # across the axis
+    shadow = np.asarray(cv2.GaussianBlur(shadow, (0, 0), max(penumbra_mm * PPM, 0.1)), np.float32)
+    out = (page.astype(np.float32) * (1 - 0.75 * shadow)).astype(np.uint8)
+    return _draw_ellipse(out, template, axes_mm=(118, 43))
+
+
+def test_insole_with_a_soft_cast_shadow_is_shadow(template: Template) -> None:
+    page = _cast_shadow(_page(template), template, penumbra_mm=2.5)
+    assert _code(template, page) == RejectionCode.SHADOW
+
+
+def test_blurred_photo_with_a_shadow_is_too_blurry(template: Template) -> None:
+    page = _cast_shadow(_page(template), template, penumbra_mm=2.5)
+    page = cv2.GaussianBlur(page, (0, 0), 0.8 * PPM)
+    assert _code(template, page) == RejectionCode.TOO_BLURRY
+
+
+def test_shadow_border_as_sharp_as_the_insole_is_not_detected(template: Template) -> None:
+    """The known blind spot: with no penumbra (e.g. after a scanner app's contrast boost),
+    the shadow is just a bigger, dark insole. Here so a change in behaviour is noticed."""
+    seg = _segment(template, _cast_shadow(_page(template), template, penumbra_mm=0.0))
+    assert seg.area_mm2 > ELLIPSE_AREA_MM2 * 1.05
+
+
+def test_edge_profile_skips_the_points_it_is_told_to() -> None:
+    img = np.full((200, 400), 1.0, np.float32)
+    cv2.circle(img, (200, 100), 70, 0.2, -1)
+    img = np.asarray(cv2.GaussianBlur(img, (0, 0), 20.0), np.float32)
+    theta = np.linspace(0, 2 * np.pi, 440, endpoint=False)
+    contour = np.column_stack([200 + 70 * np.cos(theta), 100 + 70 * np.sin(theta)])
+    nothing, everything = np.zeros(img.shape, bool), np.ones(img.shape, bool)
+    judged = edge_profile(img, contour, 0.8, nothing, 20, 15.0)
+    assert judged.soft_px == len(contour)
+    assert judged.sharp_px == pytest.approx(20.0, rel=0.15)
+    skipped = edge_profile(img, contour, 0.8, everything, 20, 15.0)
+    assert skipped.soft_px == 0
+    assert skipped.sharp_px == math.inf
 
 
 def test_insole_across_the_guide_touches_the_edge(template: Template) -> None:

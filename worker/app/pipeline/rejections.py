@@ -13,6 +13,7 @@ class RejectionCode(StrEnum):
     TOO_DARK = "too_dark"
     INSOLE_NOT_FOUND = "insole_not_found"
     TOO_BLURRY = "too_blurry"
+    SHADOW = "shadow"
     INSOLE_TOUCHES_EDGE = "insole_touches_edge"
     INSOLE_NOT_MEASURABLE = "insole_not_measurable"
 
@@ -38,6 +39,12 @@ MESSAGES: dict[RejectionCode, str] = {
     RejectionCode.TOO_BLURRY: (
         "The photo is too blurry to measure the insole's edge precisely. Hold the phone "
         "steady, tap the insole on screen to focus, and take the photo again."
+    ),
+    RejectionCode.SHADOW: (
+        "A shadow falls next to or across the insole, so we can't see exactly where its "
+        "edge is. Take the photo again in soft, even light from above, for example in "
+        "daylight away from direct sun or with the lamp behind you, and keep your hand "
+        "and phone from casting a shadow."
     ),
     RejectionCode.INSOLE_TOUCHES_EDGE: (
         "The insole reaches over the grey dashed lines or out of the photo. Place it fully "

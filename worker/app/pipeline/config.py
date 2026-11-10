@@ -9,7 +9,7 @@ regression tests (#25) within tolerance or be deliberate.
 # to the classification section changes**, or the markers/warp/segment/measure logic does:
 # patch = a threshold nudge, minor = a new measurement, major = a different frame or
 # definition. The classifier has its own CLASSIFIER_VERSION below.
-PIPELINE_VERSION = "1.0.0"
+PIPELINE_VERSION = "1.1.0"
 
 # Resolution of the flattened top-down page image. 10 px/mm makes an A4 page 2100 x 2970 px:
 # fine enough for 0.1 mm rounding, small enough to process in well under a second.
@@ -56,6 +56,15 @@ CLEANUP_KERNEL_MM = 0.7
 # already moves page points by ~0.6 mm and 0.9 mm by ~2 mm, while segmentation itself
 # stays within ~0.1 mm. 0.5 mm keeps the whole pipeline inside the 1 mm tolerance.
 MAX_EDGE_BLUR_MM = 0.5
+
+# Shadow check (ADR 0013). A cast shadow that merges with the insole moves the outline
+# onto the shadow's soft border. In-focus insole edges measure 0.1-0.4 mm (fixtures and
+# real photos), shadow borders 2-20 mm. A photo is rejected when at least
+# SHADOW_MIN_LENGTH_MM of the outline is blurred more than SHADOW_EDGE_BLUR_MM, each point
+# judged by the median over SHADOW_RUN_MM of outline around it.
+SHADOW_EDGE_BLUR_MM = 1.5
+SHADOW_RUN_MM = 2.0
+SHADOW_MIN_LENGTH_MM = 10.0
 
 # The insole "touches the edge" of the search region if at least this much of its
 # outline (mm) lies on that edge.
