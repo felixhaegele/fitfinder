@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/felixhaegele/fitfinder/compare/v0.1.1...v0.1.2) (2026-11-10)
+
+
+### Documentation
+
+* **infra:** add secret values before the first full apply ([#114](https://github.com/felixhaegele/fitfinder/issues/114)) ([16b886b](https://github.com/felixhaegele/fitfinder/commit/16b886b3bcfd3e44d2df29d4b03da8423765a014))
+
 ## [0.1.1](https://github.com/felixhaegele/fitfinder/compare/v0.1.0...v0.1.1) (2026-11-10)
 
 
