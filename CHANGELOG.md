@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/felixhaegele/fitfinder/compare/v0.1.2...v0.2.0) (2026-11-10)
+
+
+### Features
+
+* per-insole table and printable 1:1 insole PDF on the shoe page ([#126](https://github.com/felixhaegele/fitfinder/issues/126)) ([6ff0f40](https://github.com/felixhaegele/fitfinder/commit/6ff0f40d92a3a59eac4a49a322bc45f1677ba2b6))
+
 ## [0.1.2](https://github.com/felixhaegele/fitfinder/compare/v0.1.1...v0.1.2) (2026-11-10)
 
 
