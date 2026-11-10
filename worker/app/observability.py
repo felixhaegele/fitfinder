@@ -89,8 +89,14 @@ def before_send(event: Event, hint: Hint) -> Event:
     return scrubbed
 
 
-def init_sentry() -> bool:
-    """Initialise Sentry if SENTRY_DSN is set. Returns whether it was initialised."""
+def init_sentry(auto_integrations: bool = True) -> bool:
+    """Initialise Sentry if SENTRY_DSN is set. Returns whether it was initialised.
+
+    With `auto_integrations` (the HTTP app), the SDK enables integrations for installed
+    libraries, such as FastAPI/Starlette. The queue worker passes False: importing those
+    libraries costs about a second on every scheduled run, and the default integrations
+    (logging, uncaught exceptions, threads) already report its errors.
+    """
     dsn = os.environ.get("SENTRY_DSN")
     if not dsn:
         return False
@@ -98,13 +104,13 @@ def init_sentry() -> bool:
         dsn=dsn,
         # development / preview / production; the SDK would default to "production".
         environment=os.environ.get("SENTRY_ENVIRONMENT") or "development",
-        # Git SHA of the deployed image, set at deploy time (#33).
+        # Git SHA of the image, baked in at build time (worker/Dockerfile, #33).
         release=os.environ.get("SENTRY_RELEASE") or None,
         send_default_pii=False,
         include_local_variables=False,
         max_request_body_size="never",
         # Errors only: performance tracing stays off (no traces_sample_rate).
         before_send=before_send,
-        # The FastAPI/Starlette integrations are enabled automatically.
+        auto_enabling_integrations=auto_integrations,
     )
     return True
