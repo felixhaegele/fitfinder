@@ -62,6 +62,7 @@ The full worker checklist is on #29.
 - **Consent:** a required checkbox on every upload; `consent_at` is set by the server.
 - **Metadata:** removed in the browser and again by the worker.
 - **Deletion:** users can delete single submissions and their whole account. Account deletion removes all photos (including `processed/`) and all rows, immediately (ADR 0006).
+- **Notice and terms:** `/privacy` (GDPR Art. 13 / FADP Art. 19) and `/terms`. Update them with any change to how data is stored, shown or deleted. Operator name, address, contact email and governing law are placeholders in `web/src/lib/legal.ts` until the owner decides them.
 - **Email:** before real users, login emails need our own provider with an EU region and a DPA (#69).
 
 ## Open items
