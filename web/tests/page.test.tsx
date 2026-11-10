@@ -7,23 +7,37 @@ import Home from "@/app/page";
 afterEach(cleanup);
 
 describe("Home page", () => {
-  it("shows the product name and pitch", () => {
+  it("leads with the benefit and the product name", () => {
     render(<Home />);
 
-    expect(screen.getByRole("heading", { level: 1, name: "FitFinder" })).toBeInTheDocument();
-    expect(screen.getByText(/find cycling shoes that fit/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Cycling shoes that fit your feet" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("FitFinder")).toBeInTheDocument();
   });
 
-  it("shows the three steps in order, each with its link", () => {
+  it("offers upload as the primary action and browsing as the secondary one", () => {
     render(<Home />);
 
-    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual([
-      "Print the template",
-      "Upload an insole photo",
-      "Browse shoes by fit",
+    const ctas = screen
+      .getAllByRole("link")
+      .filter((link) => ["Upload a shoe", "View shoes"].includes(link.textContent ?? ""));
+    // Primary first, in reading order.
+    expect(ctas.map((link) => [link.textContent, link.getAttribute("href")])).toEqual([
+      ["Upload a shoe", "/upload"],
+      ["View shoes", "/shoes"],
     ]);
-    expect(screen.getByRole("link", { name: "Get the template" })).toHaveAttribute("href", "/template");
-    expect(screen.getByRole("link", { name: "Upload a photo" })).toHaveAttribute("href", "/upload");
-    expect(screen.getByRole("link", { name: "Browse shoes" })).toHaveAttribute("href", "/shoes");
+    expect(screen.getByRole("link", { name: "printed A4 template" })).toHaveAttribute("href", "/template");
+  });
+
+  it("explains the three steps in order", () => {
+    render(<Home />);
+
+    expect(screen.getByRole("heading", { level: 2, name: "How it works" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual([
+      "Print the template",
+      "Photograph the insole",
+      "Compare by fit",
+    ]);
   });
 });
