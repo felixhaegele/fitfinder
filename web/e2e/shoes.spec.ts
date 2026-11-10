@@ -102,7 +102,8 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   await expect(row).toHaveCount(1);
   // Only the done submission counts; the rejected one (narrow, 999 mm) doesn't.
   await expect(row).toContainText("1 insole measured");
-  await expect(row).toContainText("272.5 mm");
+  // Insole mm depend on the size, so the list shows none per model.
+  await expect(row).not.toContainText(" mm");
   await expect(row).toContainText("Wide");
   await expect(row).toContainText("Egyptian (big toe longest)");
   await expect(row).not.toContainText("Narrow");
@@ -122,12 +123,20 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   await expect(page.getByText("No measured shoes match your search.")).toBeVisible();
   await expect(page.getByRole("link", { name: new RegExp(model) })).toHaveCount(0);
 
-  // The detail page shows the summary and the per-size row.
+  // The detail page shows the labels for the model, and measurements only per size.
   await page.goto(`/shoes/${shoeId}`);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(model);
   await expect(page.getByText("1 insole measured, all sizes.")).toBeVisible();
-  await expect(page.getByText("98.2 mm").first()).toBeVisible();
-  await expect(page.getByRole("cell", { name: "EU 43" })).toBeVisible();
+  const sizeRow = page.getByRole("row", { name: /EU 43/ });
+  await expect(sizeRow.getByRole("cell", { name: "272.5 mm" })).toBeVisible();
+  await expect(sizeRow.getByRole("cell", { name: "98.2 mm" })).toBeVisible();
+  // Outside the per-size table, no mm at all.
+  const outsideTable = await page.getByRole("main").evaluate((main) => {
+    const copy = main.cloneNode(true) as HTMLElement;
+    copy.querySelectorAll("table").forEach((table) => table.remove());
+    return copy.textContent ?? "";
+  });
+  expect(outsideTable).not.toMatch(/\d mm/);
   await expect(page.getByText("not your own foot")).toBeVisible();
 
   // Nothing about the person who uploaded it, on either page.

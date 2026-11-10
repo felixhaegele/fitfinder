@@ -43,27 +43,14 @@ async function ShoeDetails({ params }: { params: PageProps<"/shoes/[id]">["param
         </h1>
         {summary && (
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {insoleCount(summary.submission_count)}, all sizes. Numbers are medians; labels are the
-            most common ones.
+            {insoleCount(summary.submission_count)}, all sizes. Labels are the most common ones.
           </p>
         )}
       </section>
 
+      {/* No measurements here: insole mm depend on the size, so they're only shown per size below. */}
       {summary ? (
-        <section className="grid gap-6 sm:grid-cols-2">
-          <div>
-            <h2 className="mb-2 font-semibold">Insole measurements</h2>
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              <dt>Length</dt>
-              <dd>{formatMm(summary.median_length_mm)}</dd>
-              <dt>Ball width</dt>
-              <dd>{formatMm(summary.median_ball_width_mm)}</dd>
-              <dt>Arch width</dt>
-              <dd>{formatMm(summary.median_arch_width_mm)}</dd>
-              <dt>Heel width</dt>
-              <dd>{formatMm(summary.median_heel_width_mm)}</dd>
-            </dl>
-          </div>
+        <section>
           <div>
             <h2 className="mb-2 font-semibold">Fit</h2>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
@@ -89,7 +76,8 @@ async function ShoeDetails({ params }: { params: PageProps<"/shoes/[id]">["param
 
       {sizes.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h2 className="font-semibold">By size</h2>
+          <h2 className="font-semibold">Insole measurements by size</h2>
+          <p className="text-xs text-zinc-500">Medians of the insoles measured in each size.</p>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-zinc-500">
