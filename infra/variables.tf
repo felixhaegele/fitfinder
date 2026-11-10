@@ -29,19 +29,28 @@ variable "monthly_budget" {
 variable "environments" {
   description = "One Cloud Run Job per environment, each with its own service account, secrets and schedule."
   type = map(object({
-    supabase_url = string
-    schedule     = string # cron, UTC
+    supabase_url       = string
+    schedule           = string # cron, UTC
+    sentry_environment = string # same names as the web app: preview (staging), production
   }))
   default = {
     staging = {
-      supabase_url = "https://xjusmksmnnywliwgspmf.supabase.co"
-      schedule     = "*/5 * * * *" # test uploads only; every 5 min keeps costs down
+      supabase_url       = "https://xjusmksmnnywliwgspmf.supabase.co"
+      schedule           = "*/5 * * * *" # test uploads only; every 5 min keeps costs down
+      sentry_environment = "preview"
     }
     prod = {
-      supabase_url = "https://usdetilhsblzfnezwdvs.supabase.co"
-      schedule     = "* * * * *" # users wait at most ~1 min (ADR 0003)
+      supabase_url       = "https://usdetilhsblzfnezwdvs.supabase.co"
+      schedule           = "* * * * *" # users wait at most ~1 min (ADR 0003)
+      sentry_environment = "production"
     }
   }
+}
+
+variable "sentry_dsn" {
+  description = "DSN of the Sentry \"worker\" project (Sentry → Project Settings → Client Keys). Empty: the worker sends nothing. Not a secret: it only allows sending events, like the web app's public DSN."
+  type        = string
+  default     = ""
 }
 
 variable "schedules_enabled" {

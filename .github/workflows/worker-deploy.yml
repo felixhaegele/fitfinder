@@ -57,6 +57,7 @@ jobs:
           context: worker
           # Template geometry lives outside worker/; see the comment in worker/Dockerfile.
           build-contexts: geometry=print/geometry
+          build-args: SENTRY_RELEASE=${{ github.sha }}
           push: true
           tags: ${{ steps.image.outputs.ref }}
           cache-from: type=gha,scope=worker

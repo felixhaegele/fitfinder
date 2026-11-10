@@ -52,9 +52,15 @@ resource "google_cloud_run_v2_job" "drain" {
             }
           }
         }
+        # SENTRY_RELEASE is baked into the image (worker/Dockerfile), so it always matches
+        # the image that runs; setting it here would fight with CI's deploys.
+        env {
+          name  = "SENTRY_DSN"
+          value = var.sentry_dsn
+        }
         env {
           name  = "SENTRY_ENVIRONMENT"
-          value = each.key
+          value = each.value.sentry_environment
         }
       }
     }

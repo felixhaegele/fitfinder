@@ -59,7 +59,7 @@ gcloud storage buckets update gs://$PROJECT-tfstate --versioning   # keeps old s
 
 ```sh
 cd infra
-cp terraform.tfvars.example terraform.tfvars   # fill in project_id and billing_account_id
+cp terraform.tfvars.example terraform.tfvars   # fill in project_id, billing_account_id and sentry_dsn
 terraform init -backend-config="bucket=$PROJECT-tfstate"
 terraform plan        # read it: around 35 resources to add, nothing to destroy
 terraform apply       # type "yes"
