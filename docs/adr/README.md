@@ -18,3 +18,4 @@ To add one, copy [`template.md`](template.md) to `NNNN-short-title.md` (next fre
 | 0010 | [Validate and measure uploads in a time-limited child process, behind one pipeline seam](0010-untrusted-uploads-in-worker.md) | Accepted |
 | 0011 | [Publish shoe fit as aggregates from security-definer functions, never as rows](0011-public-shoe-fit-summary.md) | Accepted |
 | 0012 | [Run the worker as Cloud Run Jobs, managed with Terraform, deployed via Workload Identity Federation](0012-worker-on-cloud-run.md) | Accepted |
+| 0015 | [Match a foot to the shortest measured size that is long and wide enough](0015-match-feet-to-measured-sizes.md) | Proposed |
