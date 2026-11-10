@@ -28,7 +28,7 @@ We will use **Sentry** (hosted, **EU data region**), with one Sentry project per
     - blanks values under keys like `cookie`, `token`, `authorization`, `email`.
 - **Environment and release tags.**
   - Environment is `development` / `preview` / `production`. The web app takes it from Vercel's `VERCEL_ENV`; the worker takes it from `SENTRY_ENVIRONMENT`.
-  - Release is the git SHA: `VERCEL_GIT_COMMIT_SHA` for the web app, and `SENTRY_RELEASE`, set at deploy time (#33), for the worker.
+  - Release is the git SHA: `VERCEL_GIT_COMMIT_SHA` for the web app, and `SENTRY_RELEASE`, baked into the worker image at build time (#33, `worker/Dockerfile`), for the worker.
 - **Source maps** are uploaded at build time only when `SENTRY_AUTH_TOKEN` is set, and deleted from the build output afterwards, so they're never served. Without the token, no source maps are generated.
 
 ## Alternatives considered

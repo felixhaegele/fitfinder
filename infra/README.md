@@ -55,17 +55,20 @@ gcloud storage buckets create gs://$PROJECT-tfstate \
 gcloud storage buckets update gs://$PROJECT-tfstate --versioning   # keeps old state versions
 ```
 
-### 3. Create everything with Terraform
+### 3. Create the secret containers with Terraform
+
+The Cloud Run jobs need their secrets to have a value when they're created; otherwise Google rejects them (`SecretsAccessCheckFailed`) and Terraform marks them *tainted*. So this first apply creates only the secret containers (and the APIs they need). Everything else follows in step 4, once the values are in.
 
 ```sh
 cd infra
 cp terraform.tfvars.example terraform.tfvars   # fill in project_id, billing_account_id and sentry_dsn
 terraform init -backend-config="bucket=$PROJECT-tfstate"
-terraform plan        # read it: around 35 resources to add, nothing to destroy
-terraform apply       # type "yes"
+terraform apply -target=google_secret_manager_secret.worker   # type "yes"
 ```
 
-### 4. Secret values
+`-target` limits an apply to one resource and what it depends on. Terraform warns that this is for exceptional cases; here it is one.
+
+### 4. Secret values, then the rest
 
 Per environment, two secrets. `read -rs` asks without showing the value and keeps it out of your shell history; `printf '%s'` adds no newline.
 
@@ -92,6 +95,15 @@ done
 ```
 
 Changing a value later: add a new version the same way. Jobs read `latest` on their next start.
+
+Now create everything else:
+
+```sh
+terraform plan        # read it: around 30 resources to add, nothing to destroy
+terraform apply       # type "yes"
+```
+
+If an earlier apply ran before the secrets had values, the plan says the jobs "are tainted, so must be replaced", and replacing fails on `deletion_protection`. The jobs are fine once the secrets exist: run `terraform untaint 'google_cloud_run_v2_job.drain["staging"]'` (and `["prod"]`), then plan again. It should show them updated in place.
 
 ### 5. GitHub variables for the deploy workflow
 
