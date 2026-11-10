@@ -107,8 +107,8 @@ gh variable set GCP_PROJECT_ID --body "<value>"   # same for GCP_REGION, GCP_WOR
 
 1. GitHub → Actions → **Worker deploy** → **Run workflow** (on `main`). Approve `production` when asked.
 2. Try one run by hand: `gcloud run jobs execute fitfinder-drain-staging --region europe-west1 --wait`, and check its logs in the console (Cloud Run → Jobs → the job → Logs).
-3. In `terraform.tfvars`, set `schedules_enabled = true`, then `terraform apply`. From now on staging runs every 5 minutes and prod every minute.
+3. In `terraform.tfvars`, set `schedules_enabled = true`, then `terraform apply`. From now on both staging and prod run every 5 minutes.
 
 ## Costs
 
-Each run starts a container for a few seconds. Cloud Run, Scheduler (3 jobs free per billing account), Artifact Registry and Secret Manager should stay at or near the free tier at our volume. The budget alert emails the billing admins before that changes. Check the bill after the first month.
+Each run starts a container, even when the queue is empty: measured at 5–15 s per run on prod. At one run every 5 minutes that's about 8,600 runs per environment per month (every minute would be ~43,000, which is why prod no longer runs every minute). Cloud Run, Scheduler (3 jobs free per billing account), Artifact Registry and Secret Manager should stay at or near the free tier at our volume. The budget alert emails the billing admins before that changes. Check the bill after the first month on this schedule.

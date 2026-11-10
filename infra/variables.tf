@@ -41,7 +41,7 @@ variable "environments" {
     }
     prod = {
       supabase_url       = "https://usdetilhsblzfnezwdvs.supabase.co"
-      schedule           = "* * * * *" # users wait at most ~1 min (ADR 0003)
+      schedule           = "*/5 * * * *" # users wait up to ~5 min; every minute cost too much (docs/decisions.md, 2026-11-10)
       sentry_environment = "production"
     }
   }
