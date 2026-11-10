@@ -2,19 +2,19 @@ import { expect, test } from "./fixtures";
 
 import { logInAsNewUser } from "./helpers";
 
-test("landing page shows the flow: template, upload, browse", async ({ page }) => {
+test("landing page leads to upload, browsing and the template", async ({ page }) => {
   await page.goto("/");
 
-  const steps = page.getByRole("main").getByRole("listitem");
-  await expect(steps).toHaveCount(3);
-  await expect(page.getByRole("link", { name: "Get the template" })).toHaveAttribute(
+  const main = page.getByRole("main");
+  await expect(main.getByRole("listitem")).toHaveCount(3);
+  await expect(main.getByRole("link", { name: "View shoes" })).toHaveAttribute("href", "/shoes");
+  await expect(main.getByRole("link", { name: "printed A4 template" })).toHaveAttribute(
     "href",
     "/template",
   );
-  await expect(page.getByRole("link", { name: "Browse shoes" })).toHaveAttribute("href", "/shoes");
 
-  // Upload needs a login: logged out, the link leads to the login page and back.
-  await page.getByRole("link", { name: "Upload a photo" }).click();
+  // Upload needs a login: logged out, the primary button leads to the login page and back.
+  await main.getByRole("link", { name: "Upload a shoe" }).click();
   await expect(page).toHaveURL(/\/login\?next=%2Fupload$/);
 });
 
