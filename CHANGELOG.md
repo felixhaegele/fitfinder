@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/felixhaegele/fitfinder/compare/v0.1.0...v0.1.1) (2026-11-10)
+
+
+### CI/CD
+
+* Bump astral-sh/setup-uv from 10.3.0 to 10.3.3 in the actions group across 1 directory ([#109](https://github.com/felixhaegele/fitfinder/issues/109)) ([9618684](https://github.com/felixhaegele/fitfinder/commit/961868496eb89a04f09ee7741ea5764688d7bd5f))
+
 ## 0.1.0 (2026-11-10)
 
 
