@@ -40,7 +40,7 @@ web (Next.js, Vercel) ──► Supabase (Auth, Storage, Postgres, pgmq queue)
 | `supabase/` | Supabase CLI project: migrations, seed data, local config               |
 | `print/`    | Generator for the printable A4 template (PDF)                           |
 | `docs/`     | Architecture Decision Records (ADRs) and notes                          |
-| `infra/`    | Terraform for cloud resources (added later)                             |
+| `infra/`    | Terraform for Google Cloud: worker on Cloud Run Jobs (ADR 0012)         |
 | `.github/`  | CI workflows, PR / issue templates, Dependabot                          |
 
 ## Running locally

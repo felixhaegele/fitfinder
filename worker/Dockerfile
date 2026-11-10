@@ -47,6 +47,11 @@ ENV PATH="/app/.venv/bin:$PATH" \
     TEMPLATE_GEOMETRY_DIR=/app/geometry \
     OPENCV_IO_MAX_IMAGE_PIXELS=50000000
 
+# Git SHA of this build, reported to Sentry as the release. The deploy workflow passes
+# it; local builds leave it empty. Kept last: a new SHA rebuilds no layer above.
+ARG SENTRY_RELEASE=""
+ENV SENTRY_RELEASE=$SENTRY_RELEASE
+
 USER app
 EXPOSE 8080
 
