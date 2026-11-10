@@ -92,7 +92,7 @@ test("measured shoes are listed, searchable and filterable without logging in", 
 
   // A visitor who isn't logged in (this page has no session) finds it from the header.
   await page.goto("/");
-  await page.getByRole("link", { name: "Shoes", exact: true }).click();
+  await page.getByRole("link", { name: "Find by type" }).click();
   await expect(page.getByRole("heading", { name: "Shoes by fit" })).toBeVisible();
 
   await page.getByRole("searchbox", { name: "Brand or model" }).fill(`testbrand ${model}`);
@@ -152,4 +152,53 @@ test("unknown filter values are ignored instead of failing", async ({ page }) =>
   await page.goto("/shoes?width=huge&arch=toString&q=");
   await expect(page.getByRole("heading", { name: "Shoes by fit" })).toBeVisible();
   await expect(page.getByLabel("Width")).toHaveValue("");
+});
+
+test("find by model lists shoes whose insole fits a foot plus wiggle room", async ({
+  page,
+  request,
+}) => {
+  // One measured EU 43 insole: 272.46 mm long, 98.2 mm at the ball.
+  const user = await createUser(request);
+  const model = `Foot Model ${Date.now()}`;
+  const [shoe] = await adminRest(request, "POST", "shoe_models", {
+    brand: "Testbrand",
+    model,
+    year: 2024,
+  });
+  const submission = await createSubmission(request, user.id, String(shoe.id));
+  await measure(request, submission.id, {
+    width_class: "regular",
+    arch_class: "medium",
+    toe_box_shape: "round",
+    toe_shape: "egyptian",
+  });
+
+  await page.goto("/");
+  await page.getByRole("link", { name: "Find by model" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Shoes for your feet" })).toBeVisible();
+  await expect(page.getByLabel("Wiggle room (mm)")).toHaveValue("7");
+
+  // 265 + 7 = 272 mm needed: the 272.46 mm insole fits.
+  await page.getByLabel("Foot length (mm)").fill("265");
+  await page.getByLabel("Foot width (mm)").fill("98");
+  await page.getByRole("button", { name: "Find shoes" }).click();
+  await expect(page).toHaveURL(/length=265&width=98&wiggle=7/);
+  const match = page
+    .getByRole("region", { name: "Matching shoes" })
+    .getByRole("link", { name: new RegExp(model) });
+  await expect(match).toContainText("Size EU 43");
+  await expect(match).toContainText("7.5 mm longer than your foot");
+
+  // 265 + 10 = 275 mm needed: too short now.
+  await page.getByLabel("Wiggle room (mm)").fill("10");
+  await page.getByRole("button", { name: "Find shoes" }).click();
+  await expect(page).toHaveURL(/wiggle=10/);
+  await expect(page.getByRole("link", { name: new RegExp(model) })).toHaveCount(0);
+});
+
+test("find by model explains an invalid foot size", async ({ page }) => {
+  await page.goto("/shoes/for-my-feet?length=26&width=98");
+  // Scoped to main: Next.js's route announcer is an alert too.
+  await expect(page.getByRole("main").getByRole("alert")).toHaveText(/foot length in mm, between 150 and 350/);
 });

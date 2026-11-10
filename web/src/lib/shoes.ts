@@ -22,6 +22,16 @@ export async function listShoes(filters: ShoeFilters) {
   return data;
 }
 
+/** Every shoe's fit per size, for matching a foot to a size (ADR 0014). */
+export async function listShoeSizes() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("shoe_fit_sizes");
+  if (error) {
+    throw new Error(`Could not load shoe sizes: ${error.message}`);
+  }
+  return data;
+}
+
 export async function getShoe(id: string) {
   const supabase = await createClient();
   const [model, summary, sizes] = await Promise.all([

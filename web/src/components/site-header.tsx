@@ -7,14 +7,18 @@ import { getUser } from "@/lib/auth";
 export function SiteHeader() {
   return (
     <header className="border-b border-zinc-200 dark:border-zinc-800">
-      <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-6 py-3">
+      {/* Wraps onto two rows on phones; nowrap keeps each link on one line. */}
+      <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-x-6 gap-y-2 whitespace-nowrap px-6 py-3">
         <nav className="flex items-center gap-6">
           <Link href="/" className="font-semibold">
             FitFinder
           </Link>
           {/* Public, so outside the Suspense below: visible whether or not you're logged in. */}
           <Link href="/shoes" className="text-sm font-medium">
-            Shoes
+            Find by type
+          </Link>
+          <Link href="/shoes/for-my-feet" className="text-sm font-medium">
+            Find by model
           </Link>
         </nav>
         {/* The rest of the page is static; only this part waits for the session. */}
@@ -43,7 +47,8 @@ async function AuthStatus() {
         Upload
       </Link>
       <Link href="/submissions">My uploads</Link>
-      <Link href="/account" className="text-zinc-600 dark:text-zinc-400">
+      {/* Too long for a phone's header; the account page shows it too. */}
+      <Link href="/account" className="hidden text-zinc-600 sm:inline dark:text-zinc-400">
         {user.email}
       </Link>
       <form action={signOut}>

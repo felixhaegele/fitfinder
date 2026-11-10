@@ -7,7 +7,7 @@
 -- transaction, so "newest" would otherwise be decided by luck.
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(31);
+select plan(35);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000092a1', 'fit-a@example.com'),
@@ -113,6 +113,25 @@ select is(
   'median_arch_width_mm numeric, width_class text, arch_class text, toe_box_shape text, toe_shape text)',
   'shoe_fit_by_size returns shoe-level columns only'
 );
+-- shoe_fit_sizes (ADR 0014): the same rules, and the same per-size numbers for all shoes.
+select ok(
+  (select prosecdef and 'search_path=""' = any(proconfig)
+          and proacl is not null and not exists (select 1 from aclexplode(proacl) a where a.grantee = 0)
+   from pg_proc where oid = 'public.shoe_fit_sizes()'::regprocedure),
+  'shoe_fit_sizes is security definer, pins search_path and is not executable by PUBLIC'
+);
+select ok(
+  has_function_privilege('anon', 'public.shoe_fit_sizes()', 'execute')
+  and has_function_privilege('authenticated', 'public.shoe_fit_sizes()', 'execute'),
+  'anon and authenticated can execute shoe_fit_sizes'
+);
+select is(
+  pg_get_function_result('public.shoe_fit_sizes()'::regprocedure),
+  'TABLE(shoe_model_id uuid, brand text, model text, year smallint, size numeric, size_system text, '
+  'submission_count integer, median_length_mm numeric, median_ball_width_mm numeric, '
+  'width_class text, arch_class text, toe_box_shape text, toe_shape text)',
+  'shoe_fit_sizes returns shoe-level columns only'
+);
 
 -- ---------------------------------------------------------------------------
 -- As anon
@@ -176,6 +195,13 @@ select results_eq(
 );
 select is_empty($$select 1 from public.shoe_fit_by_size('10000000-0000-0000-0000-000000000922')$$,
   'per size: nothing for a shoe without done submissions');
+select results_eq(
+  $$select brand, size, size_system, submission_count, median_length_mm, width_class
+    from public.shoe_fit_sizes() where shoe_model_id::text like '10000000-0000-0000-0000-00000000092%'$$,
+  $$values ('Fitbrand92'::text, 43.0::numeric, 'eu'::text, 1, 270.00::numeric, 'wide'::text),
+           ('Fitbrand92'::text, 44.0::numeric, 'eu'::text, 2, 285.00::numeric, 'wide'::text)$$,
+  'all shoes per size: the same rows as shoe_fit_by_size, named, without rejected-only shoes'
+);
 
 -- ---------------------------------------------------------------------------
 -- As user B, who uploaded nothing
