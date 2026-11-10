@@ -52,6 +52,7 @@ test("terms page is linked from the footer and covers the essentials", async ({ 
   for (const heading of [
     "What you can upload",
     "Your content",
+    "Reporting content",
     "Measurements are estimates",
     "Liability",
     "Law and disputes",

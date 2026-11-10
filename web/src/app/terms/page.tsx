@@ -9,6 +9,7 @@ import {
   OPERATOR_ADDRESS,
   OPERATOR_NAME,
   PENDING,
+  REPORTING_ANCHOR,
 } from "@/lib/legal";
 
 export const metadata: Metadata = { title: "Terms of use · FitFinder" };
@@ -115,7 +116,32 @@ export default function TermsPage() {
           exception is shoe models you added to the catalogue (brand, model, year): they are
           facts about a shoe, so they stay, without any link to you.
         </p>
-        <p>We may remove uploads that break these terms.</p>
+      </Section>
+
+      <Section title="Reporting content" id={REPORTING_ANCHOR}>
+        <p>
+          Anyone, with or without an account, can tell us about content on FitFinder that they
+          think is illegal or breaks these terms: for example a shoe entry with an offensive or
+          fake name, figures that look made up, or an upload that infringes someone&apos;s rights.
+          Each shoe page has a &ldquo;Report it&rdquo; link for this.
+        </p>
+        <p>Write to {CONTACT_EMAIL ?? PENDING} and include:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>where the content is (the link to the shoe page, or a description);</li>
+          <li>why you think it is illegal or breaks these terms;</li>
+          <li>your name and email address, so we can reply;</li>
+          <li>that you believe, in good faith, that your report is accurate and complete.</li>
+        </ul>
+        <p>
+          We confirm that we received your report, look at it promptly and carefully, and tell you
+          what we decided. A person reviews every report; we don&apos;t decide them automatically.
+        </p>
+        <p>
+          If we remove or restrict your content or your account, we tell you what we did and why.
+          You can reply to that email to contest the decision, and we&apos;ll look at it again.
+          You can also go to court. We may ignore reports that are clearly unfounded and are sent
+          again and again.
+        </p>
       </Section>
 
       <Section title="Measurements are estimates">

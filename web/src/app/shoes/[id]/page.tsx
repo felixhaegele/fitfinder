@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { ReportLink } from "@/components/report-link";
 import { FIT_FILTERS, fitLabel, fitLabelRows, insoleCount } from "@/lib/shoe-fit";
 import { getShoe } from "@/lib/shoes";
 import { SIZE_SYSTEMS, type SizeSystem } from "@/lib/submission-form";
@@ -126,6 +127,14 @@ async function ShoeDetails({ params }: { params: PageProps<"/shoes/[id]">["param
           </div>
         </section>
       )}
+
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        Something wrong or inappropriate on this page?{" "}
+        <ReportLink subject={`Report: ${shoe.brand} ${shoe.model} (${shoe.year}), /shoes/${id}`}>
+          Report it
+        </ReportLink>
+        .
+      </p>
     </>
   );
 }

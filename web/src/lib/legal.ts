@@ -25,3 +25,16 @@ export const GOVERNING_LAW: string | null = null;
 export const MINIMUM_AGE = 16;
 
 export const PENDING = "[to be added before launch]";
+
+/** Anchor of the "Reporting content" section on /terms. */
+export const REPORTING_ANCHOR = "reporting";
+
+/**
+ * Where a "report" link points: an email to CONTACT_EMAIL with the subject filled in, or,
+ * until that is set, the reporting section of the terms.
+ */
+export function reportHref(subject: string, contactEmail: string | null = CONTACT_EMAIL): string {
+  return contactEmail
+    ? `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}`
+    : `/terms#${REPORTING_ANCHOR}`;
+}

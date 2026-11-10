@@ -130,6 +130,11 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   await expect(page.getByRole("cell", { name: "EU 43" })).toBeVisible();
   await expect(page.getByText("not your own foot")).toBeVisible();
 
+  // Anyone can report the page. Until a contact email is set, the link leads to the terms.
+  await page.getByRole("link", { name: "Report it" }).click();
+  await expect(page).toHaveURL(/\/terms#reporting$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Reporting content" })).toBeVisible();
+
   // Nothing about the person who uploaded it, on either page.
   for (const url of [`/shoes?q=${encodeURIComponent(model)}`, `/shoes/${shoeId}`]) {
     await page.goto(url);
