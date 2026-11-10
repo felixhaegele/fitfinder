@@ -1,4 +1,4 @@
-// Matching a foot to shoe sizes for "find by size" (/shoes/for-my-feet, ADR 0014). Pure
+// Matching a foot to shoe sizes for "find by size" (/shoes/for-my-feet, ADR 0015). Pure
 // functions, so the parsing of untrusted query parameters and the matching rule can be
 // unit tested. All thresholds live here.
 

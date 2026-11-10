@@ -113,7 +113,7 @@ select is(
   'median_arch_width_mm numeric, width_class text, arch_class text, toe_box_shape text, toe_shape text)',
   'shoe_fit_by_size returns shoe-level columns only'
 );
--- shoe_fit_sizes (ADR 0014): the same rules, and the same per-size numbers for all shoes.
+-- shoe_fit_sizes (ADR 0015): the same rules, and the same per-size numbers for all shoes.
 select ok(
   (select prosecdef and 'search_path=""' = any(proconfig)
           and proacl is not null and not exists (select 1 from aclexplode(proacl) a where a.grantee = 0)

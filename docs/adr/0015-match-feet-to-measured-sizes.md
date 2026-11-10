@@ -1,4 +1,4 @@
-# 0014. Match a foot to the shortest measured size that is long and wide enough
+# 0015. Match a foot to the shortest measured size that is long and wide enough
 
 - **Status:** Proposed
 - **Date:** 2026-11-10

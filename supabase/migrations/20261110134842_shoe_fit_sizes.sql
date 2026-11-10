@@ -1,4 +1,4 @@
--- Per-size fit of every shoe, for "find by size" (ADR 0014).
+-- Per-size fit of every shoe, for "find by size" (ADR 0015).
 --
 -- The page matches a foot (length + wiggle room, width) against insoles, which only works
 -- per size: a shoe's median over all sizes says nothing about one size. shoe_fit_by_size
@@ -55,4 +55,4 @@ grant execute on function public.shoe_fit_sizes() to anon, authenticated;
 
 comment on function public.shoe_fit_sizes() is
   'Public fit summary of every shoe model per size and size system, for matching a foot '
-  'to a size. Shoe-level data only (ADR 0011, ADR 0014).';
+  'to a size. Shoe-level data only (ADR 0011, ADR 0015).';
