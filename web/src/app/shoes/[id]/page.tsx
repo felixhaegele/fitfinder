@@ -3,14 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { FIT_FILTERS, fitLabel, fitLabelRows, insoleCount } from "@/lib/shoe-fit";
+import { FIT_FILTERS, fitLabel, fitLabelRows, insoleCount, sizeLabel, UUID } from "@/lib/shoe-fit";
 import { getShoe } from "@/lib/shoes";
 import { SIZE_SYSTEMS, type SizeSystem } from "@/lib/submission-form";
 import { CLASS_LABELS, formatMm, TOE_LABELS_NOTE } from "@/lib/submission-status";
 
 export const metadata: Metadata = { title: "Shoe fit · FitFinder" };
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function ShoePage({ params }: PageProps<"/shoes/[id]">) {
   return (
@@ -33,7 +31,7 @@ async function ShoeDetails({ params }: { params: PageProps<"/shoes/[id]">["param
     notFound();
   }
 
-  const { summary, sizes } = shoe;
+  const { summary, sizes, insoles } = shoe;
 
   return (
     <>
@@ -124,6 +122,73 @@ async function ShoeDetails({ params }: { params: PageProps<"/shoes/[id]">["param
               </tbody>
             </table>
           </div>
+        </section>
+      )}
+
+      {insoles.length > 0 && (
+        <section aria-labelledby="insoles" className="flex flex-col gap-2">
+          <h2 id="insoles" className="font-semibold">
+            Insoles
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Every measured insole of this shoe. Download one, print it at 100% and stand on it with
+            your larger foot to see whether your foot fits.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="text-zinc-500">
+                <tr>
+                  <th className="py-1 pr-4 font-medium">Size</th>
+                  <th className="py-1 pr-4 font-medium">Length</th>
+                  <th className="py-1 pr-4 font-medium">Ball width</th>
+                  <th className="py-1 pr-4 font-medium">Heel width</th>
+                  <th className="py-1 pr-4 font-medium">Arch width</th>
+                  {FIT_FILTERS.map(({ column }) => (
+                    <th key={column} className="py-1 pr-4 font-medium">
+                      {CLASS_LABELS[column].label}
+                    </th>
+                  ))}
+                  <th className="py-1 pr-4 font-medium">Insole</th>
+                  <th className="py-1 font-medium">
+                    <span className="sr-only">Download</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
+                {insoles.map((insole) => (
+                  <tr key={insole.insole_id}>
+                    <td className="py-1 pr-4 whitespace-nowrap">{sizeLabel(insole.size, insole.size_system)}</td>
+                    <td className="py-1 pr-4 whitespace-nowrap">{formatMm(insole.length_mm)}</td>
+                    <td className="py-1 pr-4 whitespace-nowrap">{formatMm(insole.ball_width_mm)}</td>
+                    <td className="py-1 pr-4 whitespace-nowrap">{formatMm(insole.heel_width_mm)}</td>
+                    <td className="py-1 pr-4 whitespace-nowrap">{formatMm(insole.arch_width_mm)}</td>
+                    {FIT_FILTERS.map(({ column }) => (
+                      <td key={column} className="py-1 pr-4">
+                        {fitLabel(column, insole[column])}
+                      </td>
+                    ))}
+                    <td className="py-1 pr-4 whitespace-nowrap">
+                      {insole.insole_condition === "used" ? "Used" : "New"}, {insole.side}
+                    </td>
+                    <td className="py-1 whitespace-nowrap">
+                      {/* A plain link: the route answers with a file, nothing to prefetch. */}
+                      <a
+                        href={`/shoes/${shoe.id}/insoles/${insole.insole_id}`}
+                        className="font-medium underline"
+                        aria-label={`Download PDF, ${sizeLabel(insole.size, insole.size_system)}, ${formatMm(insole.length_mm)}`}
+                      >
+                        Download PDF
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-zinc-500">
+            The PDF has a page for each foot and never contains the photo. Check its 100 mm ruler
+            after printing.
+          </p>
         </section>
       )}
     </>

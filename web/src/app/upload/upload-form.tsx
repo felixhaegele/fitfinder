@@ -150,8 +150,10 @@ export function UploadForm({ userId, shoeModels }: { userId: string; shoeModels:
       <label className="flex items-start gap-3 text-sm">
         <input name="consent" type="checkbox" required className="mt-1" />
         <span>
-          I agree that FitFinder stores this photo to measure the insole. Location and camera
-          data are removed before upload. I can delete my photos at any time.{" "}
+          I agree that FitFinder stores this photo to measure the insole, and publishes the
+          insole&apos;s measurements and outline on the shoe&apos;s page, without the photo or my
+          name. Location and camera data are removed before upload. I can delete my photos at any
+          time.{" "}
           {/* New tab, so the half-filled form isn't lost. */}
           <a href="/privacy" target="_blank" rel="noopener" className="underline">
             How we handle your data

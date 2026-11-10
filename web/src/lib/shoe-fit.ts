@@ -1,6 +1,7 @@
 // Search filters and labels for the public shoe pages (/shoes, /shoes/[id]). Pure functions,
 // so the parsing of untrusted query parameters can be unit tested.
 
+import { SIZE_SYSTEMS, type SizeSystem } from "@/lib/submission-form";
 import { CLASS_LABELS } from "@/lib/submission-status";
 
 /** Query parameter → column of the shoe_fit_summaries result it filters on. */
@@ -21,6 +22,28 @@ export type ShoeFilters = {
 };
 
 export const MAX_SEARCH_LENGTH = 100;
+
+/** Ids in shoe URLs. Anything else can't exist, so the query is skipped (Postgres would error on the cast). */
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** 43, "eu" → "EU 43". */
+export function sizeLabel(size: number, sizeSystem: string): string {
+  return `${SIZE_SYSTEMS[sizeSystem as SizeSystem]?.label ?? sizeSystem} ${size}`;
+}
+
+/** "Shimano RC7 2023", "EU 43" → "shimano-rc7-2023-eu-43": safe in a file name. */
+export function fileSlug(...parts: string[]): string {
+  return (
+    parts
+      .join(" ")
+      .normalize("NFKD")
+      .replaceAll(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replaceAll(/[^a-z0-9]+/g, "-")
+      .replaceAll(/^-|-$/g, "")
+      .slice(0, 80) || "insole"
+  );
+}
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
