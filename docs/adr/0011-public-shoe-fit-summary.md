@@ -1,6 +1,6 @@
 # 0011. Publish shoe fit as aggregates from security-definer functions, never as rows
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [0014](0014-public-insoles.md) (per-insole shoe data and outlines are now public too)
 - **Date:** 2026-10-19
 
 ## Context

@@ -1,4 +1,5 @@
 import type { APIRequestContext } from "@playwright/test";
+import { PDFDocument } from "pdf-lib";
 
 import { expect, test } from "./fixtures";
 
@@ -127,8 +128,35 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   await expect(page.getByRole("heading", { level: 1 })).toContainText(model);
   await expect(page.getByText("1 insole measured, all sizes.")).toBeVisible();
   await expect(page.getByText("98.2 mm").first()).toBeVisible();
-  await expect(page.getByRole("cell", { name: "EU 43" })).toBeVisible();
+  await expect(page.getByRole("cell", { name: "EU 43" }).first()).toBeVisible();
   await expect(page.getByText("not your own foot")).toBeVisible();
+
+  // The insoles table lists the done insole only, with a printable PDF of it.
+  const insoles = page.getByRole("region", { name: "Insoles" });
+  const insoleRows = insoles.getByRole("row");
+  await expect(insoleRows).toHaveCount(2); // header + the done insole
+  await expect(insoleRows.nth(1)).toContainText("272.5 mm");
+  await expect(insoleRows.nth(1)).toContainText("New, left");
+  await expect(insoles).not.toContainText("999");
+  const pdfLink = insoles.getByRole("link", { name: /Download PDF/ });
+  const href = String(await pdfLink.getAttribute("href"));
+  expect(href).toMatch(new RegExp(`^/shoes/${shoeId}/insoles/[0-9a-f-]{36}$`));
+  const pdf = await request.get(href);
+  expect(pdf.ok()).toBe(true);
+  expect(pdf.headers()["content-type"]).toBe("application/pdf");
+  expect(pdf.headers()["content-disposition"]).toMatch(
+    /^attachment; filename="fitfinder-insole-testbrand-fit-model-\d+-2024-eu-43\.pdf"$/,
+  );
+  const printed = await PDFDocument.load(await pdf.body());
+  expect(printed.getPageCount()).toBe(2); // left foot, right foot
+  expect(printed.getTitle()).toBe(`FitFinder insole: Testbrand ${model} (2024), EU 43`);
+  // The insole id only works with its own shoe.
+  const otherShoe = await request.get(href.replace(shoeId, "00000000-0000-0000-0000-000000000000"));
+  expect(otherShoe.status()).toBe(404);
+  const pdfBytes = (await pdf.body()).toString("latin1");
+  for (const personal of [user.email, user.id, done.imagePath, done.id]) {
+    expect(pdfBytes).not.toContain(personal);
+  }
 
   // Nothing about the person who uploaded it, on either page.
   for (const url of [`/shoes?q=${encodeURIComponent(model)}`, `/shoes/${shoeId}`]) {
@@ -141,11 +169,14 @@ test("measured shoes are listed, searchable and filterable without logging in", 
   }
 });
 
-test("shoe pages that don't exist are not found", async ({ page }) => {
+test("shoe pages that don't exist are not found", async ({ page, request }) => {
   await page.goto("/shoes/not-a-uuid");
   await expect(page.getByText("This page could not be found")).toBeVisible();
   await page.goto("/shoes/00000000-0000-0000-0000-000000000000");
   await expect(page.getByText("This page could not be found")).toBeVisible();
+  const zero = "00000000-0000-0000-0000-000000000000";
+  expect((await request.get(`/shoes/${zero}/insoles/not-a-uuid`)).status()).toBe(404);
+  expect((await request.get(`/shoes/${zero}/insoles/${zero}`)).status()).toBe(404);
 });
 
 test("unknown filter values are ignored instead of failing", async ({ page }) => {
