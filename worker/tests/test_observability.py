@@ -31,6 +31,17 @@ def test_init_with_dsn_never_sends_pii(monkeypatch: pytest.MonkeyPatch) -> None:
     assert options["max_request_body_size"] == "never"
     assert options["environment"] == "development"
     assert options["release"] == "abc123"
+    assert options["auto_enabling_integrations"] is True  # FastAPI/Starlette for app.main
+
+
+def test_worker_init_skips_auto_integrations(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("SENTRY_DSN", "https://key@o1.ingest.de.sentry.io/1")
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(sentry_sdk, "init", lambda **kwargs: calls.append(kwargs))
+
+    assert init_sentry(auto_integrations=False) is True
+    (options,) = calls
+    assert options["auto_enabling_integrations"] is False
 
 
 @pytest.mark.parametrize(
