@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 
 import { safeNextPath } from "@/lib/redirect";
@@ -20,6 +21,18 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
       <Suspense>
         <LoginFormWithParams searchParams={searchParams} />
       </Suspense>
+      {/* A magic link creates the account, so this is where people agree to the terms. */}
+      <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        By logging in or signing up you agree to our{" "}
+        <Link href="/terms" className="underline">
+          terms of use
+        </Link>
+        . Our{" "}
+        <Link href="/privacy" className="underline">
+          privacy notice
+        </Link>{" "}
+        explains how we handle your data.
+      </p>
     </main>
   );
 }

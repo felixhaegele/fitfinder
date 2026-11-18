@@ -158,6 +158,11 @@ test("measured shoes are listed, searchable and filterable without logging in", 
     expect(pdfBytes).not.toContain(personal);
   }
 
+  // Anyone can report the page. Until a contact email is set, the link leads to the terms.
+  await page.getByRole("link", { name: "Report it" }).click();
+  await expect(page).toHaveURL(/\/terms#reporting$/);
+  await expect(page.getByRole("heading", { level: 2, name: "Reporting content" })).toBeVisible();
+
   // Nothing about the person who uploaded it, on either page.
   for (const url of [`/shoes?q=${encodeURIComponent(model)}`, `/shoes/${shoeId}`]) {
     await page.goto(url);
