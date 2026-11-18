@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { FIT_FILTERS, fitLabelRows, hasActiveFilters, insoleCount, MAX_SEARCH_LENGTH, parseShoeFilters, type ShoeFilters } from "@/lib/shoe-fit";
 import { listShoes } from "@/lib/shoes";
-import { CLASS_LABELS, formatMm, TOE_LABELS_NOTE } from "@/lib/submission-status";
+import { CLASS_LABELS, TOE_LABELS_NOTE } from "@/lib/submission-status";
 
 export const metadata: Metadata = { title: "Shoes · FitFinder" };
 
@@ -14,8 +14,8 @@ export default function ShoesPage({ searchParams }: PageProps<"/shoes">) {
       <section className="flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight">Shoes by fit</h1>
         <p className="text-zinc-600 dark:text-zinc-400">
-          Measured from insoles our users photographed. Numbers are medians; labels are the most
-          common ones.
+          Measured from insoles our users photographed. Labels are the most common ones; open a
+          shoe for its measurements per size.
         </p>
       </section>
       <Suspense fallback={<p className="text-zinc-500">Loading…</p>}>
@@ -48,8 +48,7 @@ async function ShoeSearch({ searchParams }: { searchParams: PageProps<"/shoes">[
                       {shoe.brand} {shoe.model} ({shoe.year})
                     </span>
                     <span className="text-sm text-zinc-500">
-                      {insoleCount(shoe.submission_count)} · length {formatMm(shoe.median_length_mm)} ·
-                      ball {formatMm(shoe.median_ball_width_mm)}
+                      {insoleCount(shoe.submission_count)}
                     </span>
                   </span>
                   <dl className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
