@@ -3,7 +3,7 @@
 # ---- Stage 1: build ---------------------------------------------------------
 # Installs dependencies into a virtualenv. Build tools and uv itself stay in
 # this stage and never reach the final image.
-FROM python:3.12-slim AS builder
+FROM python:3.15-slim AS builder
 
 COPY --from=ghcr.io/astral-sh/uv:0.13.1 /uv /bin/uv
 
@@ -31,7 +31,7 @@ COPY app ./app
 COPY --from=geometry *.json ./geometry/
 
 # ---- Stage 2: runtime -------------------------------------------------------
-FROM python:3.12-slim AS runtime
+FROM python:3.15-slim AS runtime
 
 # Unprivileged user: if the app is ever compromised, the attacker isn't root.
 RUN groupadd --system app && useradd --system --gid app --no-create-home app
