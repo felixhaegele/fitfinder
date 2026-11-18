@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/felixhaegele/fitfinder/compare/v0.1.2...v0.2.0) (2026-11-18)
+
+
+### Features
+
+* per-insole table and printable 1:1 insole PDF on the shoe page ([#126](https://github.com/felixhaegele/fitfinder/issues/126)) ([6ff0f40](https://github.com/felixhaegele/fitfinder/commit/6ff0f40d92a3a59eac4a49a322bc45f1677ba2b6))
+* **web:** landing page CTAs, find shoes by size, measurements per size only ([#124](https://github.com/felixhaegele/fitfinder/issues/124)) ([dcb0c2f](https://github.com/felixhaegele/fitfinder/commit/dcb0c2fba813a14ba2ca73081a2856d419c42577))
+* **web:** terms of use and full GDPR / FADP privacy notice ([#125](https://github.com/felixhaegele/fitfinder/issues/125)) ([1afe745](https://github.com/felixhaegele/fitfinder/commit/1afe74577e11cfff3e1d809c3f37555da0adc757))
+
+
+### Documentation
+
+* ADR 0015 (proposed) for template v2 with heel stop, rulers and grid ([#134](https://github.com/felixhaegele/fitfinder/issues/134)) ([10b397a](https://github.com/felixhaegele/fitfinder/commit/10b397a106af24f22509b743c44cf579003dc39b))
+
 ## [0.1.2](https://github.com/felixhaegele/fitfinder/compare/v0.1.1...v0.1.2) (2026-11-10)
 
 
