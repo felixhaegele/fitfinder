@@ -19,4 +19,5 @@ To add one, copy [`template.md`](template.md) to `NNNN-short-title.md` (next fre
 | 0011 | [Publish shoe fit as aggregates from security-definer functions, never as rows](0011-public-shoe-fit-summary.md) | Accepted, amended by 0014 |
 | 0012 | [Run the worker as Cloud Run Jobs, managed with Terraform, deployed via Workload Identity Federation](0012-worker-on-cloud-run.md) | Accepted |
 | 0014 | [Publish each measured insole's shoe data and outline, so users can print it 1:1](0014-public-insoles.md) | Accepted |
-| 0015 | [Match a foot to the shortest measured size that is long and wide enough](0015-match-feet-to-measured-sizes.md) | Proposed |
+| 0015 | [Template v2: keep the diagonal A4, add a fold-line heel stop, rulers along the band and a light grid](0015-template-v2-heel-stop-and-grid.md) | Proposed |
+| 0016 | [Match a foot to the shortest measured size that is long and wide enough](0016-match-feet-to-measured-sizes.md) | Proposed |

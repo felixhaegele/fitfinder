@@ -25,17 +25,48 @@ test("privacy page is linked from the footer and covers the essentials", async (
   await expect(page).toHaveURL(/\/privacy$/);
   await expect(page.getByRole("heading", { level: 1, name: "Privacy" })).toBeVisible();
   for (const heading of [
+    "Who is responsible",
+    "Why we use it and on what legal basis",
     "Where it is stored",
+    "Transfers outside the EU and Switzerland",
     "Your consent",
     "Who can see your photos",
     "Location and camera data",
     "What is public",
+    "How long we keep it",
     "Deleting your data",
+    "Your rights",
     "Contact",
   ]) {
     await expect(page.getByRole("heading", { level: 2, name: heading })).toBeVisible();
   }
   await expect(page.getByText(/expire after 10 minutes/)).toBeVisible();
+});
+
+test("terms page is linked from the footer and covers the essentials", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("contentinfo").getByRole("link", { name: "Terms" }).click();
+
+  await expect(page).toHaveURL(/\/terms$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Terms of use" })).toBeVisible();
+  for (const heading of [
+    "What you can upload",
+    "Your content",
+    "Reporting content",
+    "Measurements are estimates",
+    "Liability",
+    "Law and disputes",
+  ]) {
+    await expect(page.getByRole("heading", { level: 2, name: heading })).toBeVisible();
+  }
+});
+
+test("the login page links to the terms and the privacy notice", async ({ page }) => {
+  await page.goto("/login");
+
+  const main = page.getByRole("main");
+  await expect(main.getByRole("link", { name: "terms of use" })).toHaveAttribute("href", "/terms");
+  await expect(main.getByRole("link", { name: "privacy notice" })).toHaveAttribute("href", "/privacy");
 });
 
 test("the upload consent links to the privacy page in a new tab", async ({ page, request }) => {

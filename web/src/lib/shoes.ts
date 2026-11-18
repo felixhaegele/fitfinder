@@ -23,7 +23,7 @@ export async function listShoes(filters: ShoeFilters) {
   return data;
 }
 
-/** Every shoe's fit per size, for matching a foot to a size (ADR 0015). */
+/** Every shoe's fit per size, for matching a foot to a size (ADR 0016). */
 export async function listShoeSizes() {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("shoe_fit_sizes");
