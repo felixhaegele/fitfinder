@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  fileSlug,
   fitLabel,
   fitLabelRows,
   hasActiveFilters,
   insoleCount,
   MAX_SEARCH_LENGTH,
   parseShoeFilters,
+  sizeLabel,
 } from "@/lib/shoe-fit";
 
 describe("parseShoeFilters", () => {
@@ -96,5 +98,26 @@ describe("insoleCount", () => {
   it("uses singular and plural", () => {
     expect(insoleCount(1)).toBe("1 insole measured");
     expect(insoleCount(3)).toBe("3 insoles measured");
+  });
+});
+
+describe("sizeLabel", () => {
+  it("names the size system", () => {
+    expect(sizeLabel(43, "eu")).toBe("EU 43");
+    expect(sizeLabel(9.5, "mystery")).toBe("mystery 9.5");
+  });
+});
+
+describe("fileSlug", () => {
+  it("makes a safe, readable file name", () => {
+    expect(fileSlug("Fi'zi:k", "Vento Infinito Carbon 2", "2024", "EU 43.5")).toBe(
+      "fi-zi-k-vento-infinito-carbon-2-2024-eu-43-5",
+    );
+    expect(fileSlug("Crème", "Brûlée")).toBe("creme-brulee");
+  });
+
+  it("never returns an empty or overlong name", () => {
+    expect(fileSlug("碳", "\"/\\")).toBe("insole");
+    expect(fileSlug("x".repeat(200)).length).toBeLessThanOrEqual(80);
   });
 });

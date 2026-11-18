@@ -106,14 +106,16 @@ export default function TermsPage() {
       <Section title="Your content">
         <p>
           Your photos stay yours. So that we can run FitFinder, you allow us, free of charge, to
-          store and process your photos and shoe details, to measure the insole, and to include
-          the measurements in the combined public figures for that shoe model and size. We
+          store and process your photos and shoe details, to measure the insole, and to publish
+          the insole&apos;s measurements and outline on the shoe&apos;s page (without the photo or
+          your name), including in the combined figures for that shoe model and size. We
           don&apos;t show your photos to anyone else.
         </p>
         <p>
-          This permission ends when you delete the upload or your account. From then on the photo
-          and its measurements are gone, and they no longer count in the public figures. The one
-          exception is shoe models you added to the catalogue (brand, model, year): they are
+          This permission ends when you delete the upload or your account. From then on the
+          photo, its measurements and its outline are gone from FitFinder, and they no longer
+          count in the public figures. We can&apos;t recall PDFs of the outline that someone
+          already downloaded. The one exception is shoe models you added to the catalogue (brand, model, year): they are
           facts about a shoe, so they stay, without any link to you.
         </p>
       </Section>

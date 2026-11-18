@@ -20,8 +20,14 @@ How FitFinder protects user data, what it trusts and what it doesn't. Details of
 | Photos (`insoles` bucket, private) | – | upload, read, delete in **own folder** `<user_id>/`; can't overwrite | everything |
 | pgmq queue | – | – (schema not exposed) | read / archive |
 | Shoe fit summary (`shoe_fit_summaries()`, `shoe_fit_by_size()`) | read | read | read |
+| Public insoles (`shoe_insoles()`, `shoe_insole()`) | read | read | read |
 
-The shoe fit summary (ADR 0011) is the one place where other people's results reach the public. It is not a table: two `security definer` functions aggregate done submissions and return **shoe-level columns only** (count, median mm, most common labels), never user ids, image paths, dates or outlines. The rows behind them keep the rules above. `95_shoe_fit_summary.test.sql` pins the output columns and grants.
+The shoe fit summary (ADR 0011) and the public insoles (ADR 0014) are the only places where other people's results reach the public. Neither is a table; both are `security definer` functions over done submissions with a fixed list of output columns.
+
+- **The summary** returns aggregates per shoe and size: count, median mm and the most common labels.
+- **The insoles** return one row per insole with **shoe data only**: size, measurements, labels, insole condition, side and the outline (for the printable PDF). The row is keyed by a separate random `submissions.public_id`.
+
+Neither ever returns user ids, image paths, dates or submission ids. The rows behind them keep the rules above. `95_shoe_fit_summary.test.sql` and `97_public_insoles.test.sql` pin the output columns and grants.
 
 On top of RLS, **column grants** stop users from setting `status`, `user_id`, `created_by`, `processed_image_path` or timestamps at all, so a policy mistake alone doesn't open them up. pgTAP tests in `supabase/tests/database/` cover each rule for anonymous, user A, user B and the worker.
 

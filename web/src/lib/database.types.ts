@@ -99,14 +99,14 @@ isOneToOne: false
                   ]
                 },"submissions": {
                   Row: {
-                    "consent_at": string,"created_at": string,"id": string,"image_path": string,"insole_condition": string,"processed_image_path": string | null,"rejection_reason": string | null,"shoe_model_id": string,"size": number,"size_system": string,"status": string,"updated_at": string,"user_id": string
+                    "consent_at": string,"created_at": string,"id": string,"image_path": string,"insole_condition": string,"processed_image_path": string | null,"public_id": string,"rejection_reason": string | null,"shoe_model_id": string,"size": number,"size_system": string,"status": string,"updated_at": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "consent_at": string,"created_at"?: string,"id"?: string,"image_path": string,"insole_condition": string,"processed_image_path"?: string | null,"rejection_reason"?: string | null,"shoe_model_id": string,"size": number,"size_system": string,"status"?: string,"updated_at"?: string,"user_id"?: string
+                    "consent_at": string,"created_at"?: string,"id"?: string,"image_path": string,"insole_condition": string,"processed_image_path"?: string | null,"public_id"?: string,"rejection_reason"?: string | null,"shoe_model_id": string,"size": number,"size_system": string,"status"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Update: {
-                    "consent_at"?: string,"created_at"?: string,"id"?: string,"image_path"?: string,"insole_condition"?: string,"processed_image_path"?: string | null,"rejection_reason"?: string | null,"shoe_model_id"?: string,"size"?: number,"size_system"?: string,"status"?: string,"updated_at"?: string,"user_id"?: string
+                    "consent_at"?: string,"created_at"?: string,"id"?: string,"image_path"?: string,"insole_condition"?: string,"processed_image_path"?: string | null,"public_id"?: string,"rejection_reason"?: string | null,"shoe_model_id"?: string,"size"?: number,"size_system"?: string,"status"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -137,6 +137,16 @@ isOneToOne: false
 "shoe_fit_summaries":
 { Args: { "search"?: string }; Returns: {
               "arch_class": string,"brand": string,"median_arch_width_mm": number,"median_ball_width_mm": number,"median_heel_width_mm": number,"median_length_mm": number,"model": string,"shoe_model_id": string,"submission_count": number,"toe_box_shape": string,"toe_shape": string,"width_class": string,"year": number
+            }[]
+                           },
+"shoe_insole":
+{ Args: { "insole": string }; Returns: {
+              "arch_class": string,"arch_width_mm": number,"ball_width_mm": number,"brand": string,"heel_width_mm": number,"insole_condition": string,"insole_id": string,"length_mm": number,"model": string,"outline_mm": Json,"shoe_model_id": string,"side": string,"size": number,"size_system": string,"toe_box_shape": string,"toe_shape": string,"width_class": string,"year": number
+            }[]
+                           },
+"shoe_insoles":
+{ Args: { "shoe_model": string }; Returns: {
+              "arch_class": string,"arch_width_mm": number,"ball_width_mm": number,"heel_width_mm": number,"insole_condition": string,"insole_id": string,"length_mm": number,"side": string,"size": number,"size_system": string,"toe_box_shape": string,"toe_shape": string,"width_class": string
             }[]
                            }
           }

@@ -80,13 +80,13 @@ export default function PrivacyPage() {
       <Section title="Your consent">
         <p>
           Before each upload you tick a box to agree that we store the photo, measure the insole
-          and count the measurements towards the public figures for that shoe. Without it,
-          nothing is uploaded. We record when you agreed.
+          and publish its measurements and outline on the shoe&apos;s page, without the photo or
+          your name. Without it, nothing is uploaded. We record when you agreed.
         </p>
         <p>
           You can withdraw your consent at any time by deleting the upload (see &ldquo;Deleting
           your data&rdquo;). This doesn&apos;t make what we did before unlawful, but from then on
-          the photo, its measurements and its share in the public figures are gone.
+          the photo, its measurements, its outline and its share in the public figures are gone.
         </p>
       </Section>
 
@@ -160,13 +160,19 @@ export default function PrivacyPage() {
         <p>
           The shoe pages show measurements <strong>per shoe model and size</strong>, combined
           from everyone&apos;s uploads: how many insoles were measured, typical lengths and widths,
-          and the most common fit labels. They never show photos, email addresses or who uploaded
-          what.
+          and the most common fit labels.
         </p>
         <p>
-          If only one person has measured a shoe in a given size, its figures come from that one
-          insole. They describe the shoe, not you. The figures are calculated fresh each time a
-          page is opened, so when you delete an upload it no longer counts.
+          They also list <strong>every measured insole</strong>: its size, lengths and widths, fit
+          labels, whether it was new or used, which side you photographed, and its outline. Anyone
+          can download that outline as a PDF to print and stand on. The shoe pages never show
+          photos, email addresses, upload dates or who uploaded what. These figures describe the
+          shoe, not you.
+        </p>
+        <p>
+          When you delete an upload or your account, its insole disappears from the shoe pages
+          and can no longer be downloaded. We can&apos;t recall PDFs that someone already
+          downloaded.
         </p>
         <p>Shoe models you add to the catalogue are visible to everyone, without your name.</p>
       </Section>
