@@ -12,10 +12,12 @@ Two rules keep retries correct (ADR 0003):
   and the message is gone, or neither happened and the message comes back for a retry.
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import StrEnum
 from types import TracebackType
-from typing import Any, Protocol, Self
+from typing import TYPE_CHECKING, Any, Protocol, Self
 from uuid import UUID
 
 import psycopg
@@ -23,7 +25,11 @@ from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
 
 from app.jobs import config
-from app.jobs.process import ClassificationRow, MeasurementRow
+
+if TYPE_CHECKING:
+    # Types only: importing app.jobs.process loads numpy and the pipeline, which the
+    # empty-queue check in app.jobs.drain must not pay for.
+    from app.jobs.process import ClassificationRow, MeasurementRow
 
 # Statuses after which a submission is never processed again.
 FINAL_STATUSES = frozenset({"done", "rejected", "failed"})
